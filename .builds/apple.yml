@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: Unlicense OR MIT
+image: debian/testing
+packages:
+ - clang
+ - cmake
+ - curl
+ - autoconf
+ - libxml2-dev
+ - libssl-dev
+ - libz-dev
+ - llvm-dev # for cctools
+ - uuid-dev ## for cctools
+ - libplist-utils # for gogio
+sources:
+ - https://git.sr.ht/~eliasnaur/gio-cmd
+ - https://git.sr.ht/~eliasnaur/applesdks
+ - https://git.sr.ht/~eliasnaur/giouiorg
+ - https://github.com/tpoechtrager/cctools-port.git
+ - https://github.com/tpoechtrager/apple-libtapi.git
+ - https://github.com/mackyle/xar.git
+environment:
+   APPLE_TOOLCHAIN_ROOT: /home/build/appletools
+   PATH: /home/build/sdk/go/bin:/home/build/go/bin:/usr/bin
+tasks:
+ - install_go: |
+     mkdir -p /home/build/sdk
+     curl -s https://dl.google.com/go/go1.17.7.linux-amd64.tar.gz | tar -C /home/build/sdk -xzf -
+ - prepare_toolchain: |
+     mkdir -p $APPLE_TOOLCHAIN_ROOT
+     cd $APPLE_TOOLCHAIN_ROOT
+     tar xJf /home/build/applesdks/applesdks.tar.xz
+     mkdir bin tools
+     cd bin
+     ln -s ../toolchain/bin/x86_64-apple-darwin19-ld ld
+     ln -s ../toolchain/bin/x86_64-apple-darwin19-ar ar
+     ln -s /home/build/cctools-port/cctools/misc/lipo lipo
+     ln -s ../tools/appletoolchain xcrun
+     ln -s /usr/bin/plistutil plutil
+     cd ../tools
+     ln -s appletoolchain clang-ios
+     ln -s appletoolchain clang-macos
+ - install_appletoolchain: |
+     cd giouiorg
+     go build -o $APPLE_TOOLCHAIN_ROOT/tools ./cmd/appletoolchain
+ - build_xar: |
+     cd xar/xar
+     ac_cv_lib_crypto_OpenSSL_add_all_ciphers=yes CC=clang ./autogen.sh --prefix=/usr
+     make
+     sudo make install
+ - build_libtapi: |
+     cd apple-libtapi
+     INSTALLPREFIX=$APPLE_TOOLCHAIN_ROOT/libtapi ./build.sh
+     ./install.sh
+ - build_cctools: |
+     cd cctools-port/cctools
+     ./configure --prefix $APPLE_TOOLCHAIN_ROOT/toolchain --with-libtapi=$APPLE_TOOLCHAIN_ROOT/libtapi --target=x86_64-apple-darwin19
+     make install
+ - install_gogio: |
+     cd gio-cmd
+     go install ./gogio
+ - test_ios_gogio: |
+     mkdir tmp
+     cd tmp
+     go mod init example.com
+     go get -d gioui.org/example/kitchen
+     export PATH=/home/build/appletools/bin:$PATH
+     gogio -target ios -o app.app gioui.org/example/kitchen

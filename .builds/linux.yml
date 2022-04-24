@@ -1,0 +1,91 @@
+# SPDX-License-Identifier: Unlicense OR MIT
+image: debian/testing
+packages:
+ - curl
+ - pkg-config
+ - libwayland-dev
+ - libx11-dev
+ - libx11-xcb-dev
+ - libxkbcommon-dev
+ - libxkbcommon-x11-dev
+ - libgles2-mesa-dev
+ - libegl1-mesa-dev
+ - libffi-dev
+ - libvulkan-dev
+ - libxcursor-dev
+ - libxrandr-dev
+ - libxinerama-dev
+ - libxi-dev
+ - libxxf86vm-dev
+ - mesa-vulkan-drivers
+ - wine
+ - xvfb
+ - xdotool
+ - scrot
+ - sway
+ - grim
+ - wine
+ - unzip
+sources:
+ - https://git.sr.ht/~eliasnaur/gio-cmd
+environment:
+ PATH: /home/build/sdk/go/bin:/usr/bin:/home/build/go/bin:/home/build/android/tools/bin
+ ANDROID_SDK_ROOT: /home/build/android
+ android_sdk_tools_zip: sdk-tools-linux-3859397.zip
+ android_ndk_zip: android-ndk-r20-linux-x86_64.zip
+ github_mirror: git@github.com:gioui/gio-cmd
+secrets:
+ - fdc570bf-87f4-4528-8aee-4d1711b1c86f
+tasks:
+ - install_go: |
+     mkdir -p /home/build/sdk
+     curl -s https://dl.google.com/go/go1.17.7.linux-amd64.tar.gz | tar -C /home/build/sdk -xzf -
+ - check_gofmt: |
+     cd gio-cmd
+     test -z "$(gofmt -s -l .)"
+ - check_sign_off: |
+     set +x -e
+     cd gio-cmd
+     for hash in $(git log -n 20 --format="%H"); do
+        message=$(git log -1 --format=%B $hash)
+        if [[ ! "$message" =~ "Signed-off-by: " ]]; then
+            echo "Missing 'Signed-off-by' in commit $hash"
+            exit 1
+        fi
+     done
+ - mirror: |
+     # mirror to github
+     ssh-keyscan github.com > "$HOME"/.ssh/known_hosts && cd gio-cmd && git push --mirror "$github_mirror" || echo "failed mirroring"
+ - install_chrome: |
+     curl -s https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+     sudo sh -c 'echo "deb [arch=amd64] https://dl-ssl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+     sudo apt-get -qq update
+     sudo apt-get -qq install -y google-chrome-stable
+ - test: |
+     cd gio-cmd
+     go test ./...
+     go test -race ./...
+ - install_jdk8: |
+     curl -so jdk.deb "https://cdn.azul.com/zulu/bin/zulu8.42.0.21-ca-jdk8.0.232-linux_amd64.deb"
+     sudo apt-get -qq install -y -f ./jdk.deb
+ - install_android: |
+     mkdir android
+     cd android
+     curl -so sdk-tools.zip https://dl.google.com/android/repository/$android_sdk_tools_zip
+     unzip -q sdk-tools.zip
+     rm sdk-tools.zip
+     curl -so ndk.zip https://dl.google.com/android/repository/$android_ndk_zip
+     unzip -q ndk.zip
+     rm ndk.zip
+     mv android-ndk-* ndk-bundle
+     yes|sdkmanager --licenses
+     sdkmanager "platforms;android-31" "build-tools;32.0.0"
+ - install_gogio: |
+     cd gio-cmd
+     go install ./gogio
+ - test_android_gogio: |
+     mkdir tmp
+     cd tmp
+     go mod init example.com
+     go get -d gioui.org/example/kitchen
+     gogio -target android gioui.org/example/kitchen
