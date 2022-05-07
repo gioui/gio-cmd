@@ -65,6 +65,9 @@ func flagValidate() error {
 	if pkgPathArg == "" {
 		return errors.New("specify a package")
 	}
+	if len(flag.Args()) > 1 {
+		return fmt.Errorf(`invalid package path of "%s". Build argument must be specified before the package ("%s")`, strings.Join(flag.Args(), " "), pkgPathArg)
+	}
 	if *target == "" {
 		return errors.New("please specify -target")
 	}
