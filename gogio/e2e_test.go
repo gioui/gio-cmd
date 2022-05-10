@@ -69,8 +69,9 @@ func TestEndToEnd(t *testing.T) {
 	t.Parallel()
 
 	const (
-		testdataWithGoImportPkgPath = "gioui.org/cmd/gogio/testdata"
-		testdataWithRelativePkgPath = "testdata/testdata.go"
+		testdataWithGoImportPkgPath             = "gioui.org/cmd/gogio/internal/normal"
+		testdataWithRelativePkgPath             = "internal/normal/testdata.go"
+		customRenderTestdataWithRelativePkgPath = "internal/custom/testdata.go"
 	)
 	// Keep this list local, to not reuse TestDriver objects.
 	subtests := []struct {
@@ -80,6 +81,7 @@ func TestEndToEnd(t *testing.T) {
 	}{
 		{"X11 using go import path", &X11TestDriver{}, testdataWithGoImportPkgPath},
 		{"X11", &X11TestDriver{}, testdataWithRelativePkgPath},
+		{"X11 with custom rendering", &X11TestDriver{}, customRenderTestdataWithRelativePkgPath},
 		// Doesn't work on the builders.
 		//{"Wayland", &WaylandTestDriver{}, testdataWithRelativePkgPath},
 		{"JS", &JSTestDriver{}, testdataWithRelativePkgPath},
