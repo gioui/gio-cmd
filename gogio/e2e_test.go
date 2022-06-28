@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -75,23 +76,27 @@ func TestEndToEnd(t *testing.T) {
 	)
 	// Keep this list local, to not reuse TestDriver objects.
 	subtests := []struct {
-		name    string
-		driver  TestDriver
-		pkgPath string
+		name      string
+		driver    TestDriver
+		pkgPath   string
+		skipGeese string
 	}{
-		{"X11 using go import path", &X11TestDriver{}, testdataWithGoImportPkgPath},
-		{"X11", &X11TestDriver{}, testdataWithRelativePkgPath},
-		{"X11 with custom rendering", &X11TestDriver{}, customRenderTestdataWithRelativePkgPath},
+		{"X11 using go import path", &X11TestDriver{}, testdataWithGoImportPkgPath, ""},
+		{"X11", &X11TestDriver{}, testdataWithRelativePkgPath, ""},
+		{"X11 with custom rendering", &X11TestDriver{}, customRenderTestdataWithRelativePkgPath, "openbsd"},
 		// Doesn't work on the builders.
 		//{"Wayland", &WaylandTestDriver{}, testdataWithRelativePkgPath},
-		{"JS", &JSTestDriver{}, testdataWithRelativePkgPath},
-		{"Android", &AndroidTestDriver{}, testdataWithRelativePkgPath},
-		{"Windows", &WineTestDriver{}, testdataWithRelativePkgPath},
+		{"JS", &JSTestDriver{}, testdataWithRelativePkgPath, ""},
+		{"Android", &AndroidTestDriver{}, testdataWithRelativePkgPath, ""},
+		{"Windows", &WineTestDriver{}, testdataWithRelativePkgPath, ""},
 	}
 
 	for _, subtest := range subtests {
 		t.Run(subtest.name, func(t *testing.T) {
 			subtest := subtest // copy the changing loop variable
+			if strings.Contains(subtest.skipGeese, runtime.GOOS) {
+				t.Skipf("not supported on %s", runtime.GOOS)
+			}
 			t.Parallel()
 			runEndToEndTest(t, subtest.driver, subtest.pkgPath)
 		})

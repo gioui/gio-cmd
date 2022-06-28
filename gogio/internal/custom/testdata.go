@@ -30,6 +30,11 @@ import (
 
 /*
 #cgo linux pkg-config: egl wayland-egl
+#cgo freebsd openbsd CFLAGS: -I/usr/local/include
+#cgo openbsd CFLAGS: -I/usr/X11R6/include
+#cgo freebsd LDFLAGS: -L/usr/local/lib
+#cgo openbsd LDFLAGS: -L/usr/X11R6/lib
+#cgo freebsd openbsd LDFLAGS: -lwayland-egl
 #cgo CFLAGS: -DEGL_NO_X11
 #cgo LDFLAGS: -lEGL -lGLESv2
 
