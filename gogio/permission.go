@@ -19,6 +19,9 @@ var AndroidPermissions = map[string][]string{
 		"android.permission.READ_EXTERNAL_STORAGE",
 		"android.permission.WRITE_EXTERNAL_STORAGE",
 	},
+	"wakelock": {
+		"android.permission.WAKE_LOCK",
+	},
 }
 
 var AndroidFeatures = map[string][]string{
