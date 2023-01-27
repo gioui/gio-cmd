@@ -69,7 +69,7 @@ func flagValidate() error {
 		return errors.New("please specify -target")
 	}
 	switch *target {
-	case "ios", "tvos", "android", "js", "windows":
+	case "ios", "tvos", "android", "js", "windows", "macos":
 	default:
 		return fmt.Errorf("invalid -target %s", *target)
 	}
@@ -100,6 +100,8 @@ func build(bi *buildInfo) error {
 		return buildAndroid(tmpDir, bi)
 	case "windows":
 		return buildWindows(tmpDir, bi)
+	case "macos":
+		return buildMac(tmpDir, bi)
 	default:
 		panic("unreachable")
 	}
