@@ -73,6 +73,8 @@ func getArchs() []string {
 			goarch = runtime.GOARCH
 		}
 		return []string{goarch}
+	case "macos":
+		return []string{"arm64", "amd64"}
 	default:
 		// TODO: Add flag tests.
 		panic("The target value has already been validated, this will never execute.")

@@ -18,7 +18,8 @@ Compiled Java class files from jar files in the package directory are
 included in Android builds.
 
 The mandatory -target flag selects the target platform: ios or android for the
-mobile platforms, tvos for Apple's tvOS, js for WebAssembly/WebGL.
+mobile platforms, tvos for Apple's tvOS, js for WebAssembly/WebGL, macos for
+MacOS and windows for Windows.
 
 The -arch flag specifies a comma separated list of GOARCHs to include. The
 default is all supported architectures.
@@ -63,7 +64,8 @@ its deletion.
 
 The -x flag will print all the external commands executed by the gogio tool.
 
-The -signkey flag specifies the path of the keystore, used for signing Android apk/aab files.
+The -signkey flag specifies the path of the keystore, used for signing Android apk/aab files
+or specifies the name of key on Keychain to sign MacOS app.
 
 The -signpass flag specifies the password of the keystore, ignored if -signkey is not provided.
 `
