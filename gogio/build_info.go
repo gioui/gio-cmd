@@ -37,12 +37,16 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 	if *iconPath != "" {
 		appIcon = *iconPath
 	}
+	appName := getPkgName(pkgMetadata)
+	if *name != "" {
+		appName = *name
+	}
 	bi := &buildInfo{
 		appID:    appID,
 		archs:    getArchs(),
 		ldflags:  getLdFlags(appID),
 		minsdk:   *minsdk,
-		name:     getPkgName(pkgMetadata),
+		name:     appName,
 		pkgDir:   pkgMetadata.Dir,
 		pkgPath:  pkgPath,
 		iconPath: appIcon,
