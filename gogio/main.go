@@ -28,6 +28,7 @@ var (
 	buildMode     = flag.String("buildmode", "exe", "specify buildmode (archive, exe)")
 	destPath      = flag.String("o", "", "output file or directory.\nFor -target ios or tvos, use the .app suffix to target simulators.")
 	appID         = flag.String("appid", "", "app identifier (for -buildmode=exe)")
+	name          = flag.String("name", "", "app name (for -buildmode=exe)")
 	version       = flag.Int("version", 1, "app version (for -buildmode=exe)")
 	printCommands = flag.Bool("x", false, "print the commands")
 	keepWorkdir   = flag.Bool("work", false, "print the name of the temporary work directory and do not delete it when exiting.")
