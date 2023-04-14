@@ -1,6 +1,6 @@
 module gioui.org/cmd
 
-go 1.17
+go 1.19
 
 require (
 	gioui.org v0.0.0-20220628163331-e21c665e70ae
