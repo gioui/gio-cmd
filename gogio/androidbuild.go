@@ -769,6 +769,8 @@ func findKeytool() (string, error) {
 	if javaHome == "" {
 		return exec.LookPath("keytool")
 	}
+
+	// bin, instead of "jre". "jre" was for older JVM it seems.
 	keytool := filepath.Join(javaHome, "bin", "keytool"+exeSuffix)
 	if _, err := os.Stat(keytool); err != nil {
 		return "", err
