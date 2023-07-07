@@ -173,6 +173,7 @@ func (b *macBuilder) buildProgram(buildInfo *buildInfo, name string, arch string
 	cmd := exec.Command(
 		"go",
 		"build",
+		"-ldflags="+buildInfo.ldflags,
 		"-tags="+buildInfo.tags,
 		"-o", filepath.Join(dest, "/Contents/MacOS/"+name),
 		buildInfo.pkgPath,
