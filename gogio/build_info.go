@@ -25,6 +25,7 @@ type buildInfo struct {
 	version  int
 	key      string
 	password string
+	deeplink []string
 }
 
 func newBuildInfo(pkgPath string) (*buildInfo, error) {
@@ -41,6 +42,10 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 	if *name != "" {
 		appName = *name
 	}
+	deeplinkSchemes := strings.Split(*deeplink, ",")
+	for i, scheme := range deeplinkSchemes {
+		deeplinkSchemes[i] = strings.TrimSpace(scheme)
+	}
 	bi := &buildInfo{
 		appID:    appID,
 		archs:    getArchs(),
@@ -55,6 +60,7 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		version:  *version,
 		key:      *signKey,
 		password: *signPass,
+		deeplink: deeplinkSchemes,
 	}
 	return bi, nil
 }
