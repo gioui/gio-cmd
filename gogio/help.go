@@ -77,4 +77,6 @@ for details. If not provided, the password will be prompted.
 
 The -notaryteamid flag specifies the team ID to use for notarization of MacOS app, ignored if
 -notaryid is not provided.
+
+The -deeplink flag specifies a list of comma separated schemes to be used for deep linking.
 `

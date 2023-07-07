@@ -40,6 +40,7 @@ var (
 	notaryID      = flag.String("notaryid", "", "specify the apple id to use for notarization.")
 	notaryPass    = flag.String("notarypass", "", "specify app-specific password of the Apple ID to be used for notarization.")
 	notaryTeamID  = flag.String("notaryteamid", "", "specify the team id to use for notarization.")
+	deeplink      = flag.String("deeplink", "", "specify a list of comma separated schemes to be used for deep linking.")
 )
 
 func main() {

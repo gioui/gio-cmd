@@ -48,6 +48,7 @@ type manifestData struct {
 	Features    []string
 	IconSnip    string
 	AppName     string
+	Scheme      []string
 }
 
 const (
@@ -445,6 +446,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		Features:    features,
 		IconSnip:    iconSnip,
 		AppName:     appName,
+		Scheme:      bi.deeplink,
 	}
 	tmpl, err := template.New("test").Parse(
 		`<?xml version="1.0" encoding="utf-8"?>
@@ -466,6 +468,14 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
+			{{range .Scheme}}
+			<intent-filter>
+				<action android:name="android.intent.action.VIEW"></action>
+				<category android:name="android.intent.category.DEFAULT"></category>
+				<category android:name="android.intent.category.BROWSABLE"></category>
+				<data android:scheme="{{.}}"></data>
+			</intent-filter>
+			{{end}}
 		</activity>
 	</application>
 </manifest>`)
