@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -124,6 +125,19 @@ func (b *macBuilder) setIcon(path string) (err error) {
 }
 
 func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
+
+	manifestSrc := struct {
+		Name    string
+		Bundle  string
+		Version int
+		Scheme  []string
+	}{
+		Name:    name,
+		Bundle:  buildInfo.appID,
+		Version: buildInfo.version,
+		Scheme:  buildInfo.deeplink,
+	}
+
 	t, err := template.New("manifest").Parse(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -138,19 +152,27 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 	<true/>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+    {{if .Scheme}}
+	<key>CFBundleURLTypes</key>
+	<array>
+	  {{range .Scheme}}
+	  <dict>
+		<key>CFBundleURLSchemes</key>
+		<array>
+		  <string>{{.}}</string>
+		</array>
+	  </dict>
+	  {{end}}
+	</array>
+    {{end}}
 </dict>
 </plist>`)
 	if err != nil {
 		return err
 	}
 
-	var manifest bufferCoff
-	if err := t.Execute(&manifest, struct {
-		Name, Bundle string
-	}{
-		Name:   name,
-		Bundle: buildInfo.appID,
-	}); err != nil {
+	var manifest bytes.Buffer
+	if err := t.Execute(&manifest, manifestSrc); err != nil {
 		return err
 	}
 	b.Manifest = manifest.Bytes()
