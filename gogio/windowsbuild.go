@@ -202,10 +202,15 @@ func (b *windowsBuilder) buildProgram(buildInfo *buildInfo, name string, arch st
 		dest = filepath.Join(filepath.Dir(b.DestDir), name+"_"+arch+".exe")
 	}
 
+	ldflags := buildInfo.ldflags
+	if buildInfo.deeplink != nil {
+		ldflags += ` -X "gioui.org/app.schemesDeeplink=` + strings.Join(buildInfo.deeplink, ",") + `" `
+	}
+
 	cmd := exec.Command(
 		"go",
 		"build",
-		"-ldflags=-H=windowsgui "+buildInfo.ldflags,
+		"-ldflags=-H=windowsgui "+ldflags,
 		"-tags="+buildInfo.tags,
 		"-o", dest,
 		buildInfo.pkgPath,

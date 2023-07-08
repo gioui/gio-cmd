@@ -324,7 +324,7 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 		Platform:        platform,
 		MinVersion:      minIOSVersion,
 		SupportPlatform: supportPlatform,
-		Scheme:          bi.scheme,
+		Scheme:          bi.deeplink,
 	}
 
 	tmpl, err := template.New("manifest").Parse(`<?xml version="1.0" encoding="UTF-8"?>
@@ -356,7 +356,7 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 	<key>DTPlatformVersion</key>
 	<string>12.4</string>
 	<key>MinimumOSVersion</key>
-	<string>{{.MinOS}}</string>
+	<string>{{.MinVersion}}</string>
 	<key>UIDeviceFamily</key>
 	<array>
 		<integer>1</integer>
