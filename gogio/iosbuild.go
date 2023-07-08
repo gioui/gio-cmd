@@ -171,15 +171,19 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 
 @interface GioAppDelegate : UIResponder <UIApplicationDelegate>
 @property (strong, nonatomic) UIWindow *window;
+@property (strong, nonatomic) GioViewController *controller;
 @end
 
 @implementation GioAppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 	self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-	GioViewController *controller = [[GioViewController alloc] initWithNibName:nil bundle:nil];
-	self.window.rootViewController = controller;
+	self.controller = [[GioViewController alloc] initWithNibName:nil bundle:nil];
+	self.window.rootViewController = self.controller;
 	[self.window makeKeyAndVisible];
 	return YES;
+}
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options {
+	return [self.controller onDeeplink:url.absoluteString];
 }
 @end
 
@@ -340,7 +344,7 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 		Platform:        platform,
 		MinVersion:      minIOSVersion,
 		SupportPlatform: supportPlatform,
-		Scheme:          bi.scheme,
+		Scheme:          bi.deeplink,
 	}
 
 	tmpl, err := template.New("manifest").Parse(`<?xml version="1.0" encoding="UTF-8"?>
@@ -372,7 +376,7 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 	<key>DTPlatformVersion</key>
 	<string>12.4</string>
 	<key>MinimumOSVersion</key>
-	<string>{{.MinOS}}</string>
+	<string>{{.MinVersion}}</string>
 	<key>UIDeviceFamily</key>
 	<array>
 		<integer>1</integer>
