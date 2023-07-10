@@ -166,7 +166,13 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 		return err
 	}
 	mainm := filepath.Join(tmpDir, "main.m")
-	const mainmSrc = `@import UIKit;
+	mainmSrc := struct {
+		Deeplink []string
+	}{
+		Deeplink: bi.deeplink,
+	}
+
+	mainTmpl, err := template.New("").Parse(`@import UIKit;
 @import Gio;
 
 @interface GioAppDelegate : UIResponder <UIApplicationDelegate>
@@ -182,19 +188,31 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 	[self.window makeKeyAndVisible];
 	return YES;
 }
+{{if .Deeplink}}
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options {
 	return [self.controller onDeeplink:url.absoluteString];
 }
+{{end}}
 @end
 
 int main(int argc, char * argv[]) {
 	@autoreleasepool {
 		return UIApplicationMain(argc, argv, nil, NSStringFromClass([GioAppDelegate class]));
 	}
-}`
-	if err := ioutil.WriteFile(mainm, []byte(mainmSrc), 0660); err != nil {
+}`)
+	if err != nil {
 		return err
 	}
+
+	mainmFile, err := os.Create(mainm)
+	if err != nil {
+		return err
+	}
+
+	if err := mainTmpl.Execute(mainmFile, mainmSrc); err != nil {
+		return err
+	}
+
 	appName := strings.Title(bi.name)
 	exe := filepath.Join(app, appName)
 	lipo := exec.Command("xcrun", "lipo", "-o", exe, "-create")
