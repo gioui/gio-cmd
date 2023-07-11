@@ -56,11 +56,17 @@ func buildMac(tmpDir string, bi *buildInfo) error {
 			}
 		}
 
-		if err := dittozip(tmpDest, finalDest+".zip"); err != nil {
+		if err := dittozip(tmpDest, tmpDest+".zip"); err != nil {
 			return err
 		}
 
-		if err := dittounzip(finalDest+".zip", finalDest); err != nil {
+		if bi.notaryAppleID != "" {
+			if err := builder.notarize(bi, tmpDest+".zip"); err != nil {
+				return err
+			}
+		}
+
+		if err := dittounzip(tmpDest+".zip", finalDest); err != nil {
 			return err
 		}
 	}
@@ -218,6 +224,25 @@ func (b *macBuilder) signProgram(buildInfo *buildInfo, binDest string, name stri
 		"--sign", buildInfo.key,
 		binDest,
 	)
+	_, err := runCmd(cmd)
+	return err
+}
+
+func (b *macBuilder) notarize(buildInfo *buildInfo, binDest string) error {
+	cmd := exec.Command(
+		"xcrun",
+		"notarytool",
+		"submit",
+		binDest,
+		"--apple-id", buildInfo.notaryAppleID,
+		"--team-id", buildInfo.notaryTeamID,
+		"--wait",
+	)
+
+	if buildInfo.notaryPassword != "" {
+		cmd.Args = append(cmd.Args, "--password", buildInfo.notaryPassword)
+	}
+
 	_, err := runCmd(cmd)
 	return err
 }

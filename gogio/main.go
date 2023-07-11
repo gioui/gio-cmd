@@ -38,6 +38,9 @@ var (
 	iconPath      = flag.String("icon", "", "specify an icon for iOS and Android")
 	signKey       = flag.String("signkey", "", "specify the path of the keystore to be used to sign Android apk files.")
 	signPass      = flag.String("signpass", "", "specify the password to decrypt the signkey.")
+	notaryID      = flag.String("notaryid", "", "specify the apple id to use for notarization.")
+	notaryPass    = flag.String("notarypass", "", "specify app-specific password of the Apple ID to be used for notarization.")
+	notaryTeamID  = flag.String("notaryteamid", "", "specify the team id to use for notarization.")
 )
 
 func main() {

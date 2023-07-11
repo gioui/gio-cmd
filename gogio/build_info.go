@@ -12,19 +12,22 @@ import (
 )
 
 type buildInfo struct {
-	appID    string
-	archs    []string
-	ldflags  string
-	minsdk   int
-	name     string
-	pkgDir   string
-	pkgPath  string
-	iconPath string
-	tags     string
-	target   string
-	version  int
-	key      string
-	password string
+	appID          string
+	archs          []string
+	ldflags        string
+	minsdk         int
+	name           string
+	pkgDir         string
+	pkgPath        string
+	iconPath       string
+	tags           string
+	target         string
+	version        int
+	key            string
+	password       string
+	notaryAppleID  string
+	notaryPassword string
+	notaryTeamID   string
 }
 
 func newBuildInfo(pkgPath string) (*buildInfo, error) {
@@ -42,19 +45,22 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		appName = *name
 	}
 	bi := &buildInfo{
-		appID:    appID,
-		archs:    getArchs(),
-		ldflags:  getLdFlags(appID),
-		minsdk:   *minsdk,
-		name:     appName,
-		pkgDir:   pkgMetadata.Dir,
-		pkgPath:  pkgPath,
-		iconPath: appIcon,
-		tags:     *extraTags,
-		target:   *target,
-		version:  *version,
-		key:      *signKey,
-		password: *signPass,
+		appID:          appID,
+		archs:          getArchs(),
+		ldflags:        getLdFlags(appID),
+		minsdk:         *minsdk,
+		name:           appName,
+		pkgDir:         pkgMetadata.Dir,
+		pkgPath:        pkgPath,
+		iconPath:       appIcon,
+		tags:           *extraTags,
+		target:         *target,
+		version:        *version,
+		key:            *signKey,
+		password:       *signPass,
+		notaryAppleID:  *notaryID,
+		notaryPassword: *notaryPass,
+		notaryTeamID:   *notaryTeamID,
 	}
 	return bi, nil
 }

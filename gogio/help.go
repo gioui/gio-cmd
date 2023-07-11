@@ -68,4 +68,13 @@ The -signkey flag specifies the path of the keystore, used for signing Android a
 or specifies the name of key on Keychain to sign MacOS app.
 
 The -signpass flag specifies the password of the keystore, ignored if -signkey is not provided.
+
+The -notaryid flag specifies the Apple ID to use for notarization of MacOS app.
+
+The -notarypass flag specifies the password of the Apple ID, ignored if -notaryid is not 
+provided. That must be an app-specific password, see https://support.apple.com/en-us/HT204397 
+for details. If not provided, the password will be prompted.
+
+The -notaryteamid flag specifies the team ID to use for notarization of MacOS app, ignored if
+-notaryid is not provided.
 `
