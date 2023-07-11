@@ -39,14 +39,29 @@ func buildMac(tmpDir string, bi *buildInfo) error {
 	}
 
 	for _, arch := range bi.archs {
-		if err := builder.buildProgram(bi, name, arch); err != nil {
+		tmpDest := filepath.Join(builder.TempDir, filepath.Base(builder.DestDir))
+		finalDest := builder.DestDir
+		if len(bi.archs) > 1 {
+			tmpDest = filepath.Join(builder.TempDir, name+"_"+arch+".app")
+			finalDest = filepath.Join(builder.DestDir, name+"_"+arch+".app")
+		}
+
+		if err := builder.buildProgram(bi, tmpDest, name, arch); err != nil {
 			return err
 		}
 
 		if bi.key != "" {
-			if err := builder.signProgram(bi, name, arch); err != nil {
+			if err := builder.signProgram(bi, tmpDest, name, arch); err != nil {
 				return err
 			}
+		}
+
+		if err := dittozip(tmpDest, finalDest+".zip"); err != nil {
+			return err
+		}
+
+		if err := dittounzip(finalDest+".zip", finalDest); err != nil {
+			return err
 		}
 	}
 
@@ -148,25 +163,20 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 	return nil
 }
 
-func (b *macBuilder) buildProgram(buildInfo *buildInfo, name string, arch string) error {
-	dest := b.DestDir
-	if len(buildInfo.archs) > 1 {
-		dest = filepath.Join(filepath.Dir(b.DestDir), name+"_"+arch+".app")
-	}
-
+func (b *macBuilder) buildProgram(buildInfo *buildInfo, binDest string, name string, arch string) error {
 	for _, path := range []string{"/Contents/MacOS", "/Contents/Resources"} {
-		if err := os.MkdirAll(filepath.Join(dest, path), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(binDest, path), 0755); err != nil {
 			return err
 		}
 	}
 
 	if len(b.Icons) > 0 {
-		if err := os.WriteFile(filepath.Join(dest, "/Contents/Resources/icon.icns"), b.Icons, 0755); err != nil {
+		if err := os.WriteFile(filepath.Join(binDest, "/Contents/Resources/icon.icns"), b.Icons, 0755); err != nil {
 			return err
 		}
 	}
 
-	if err := os.WriteFile(filepath.Join(dest, "/Contents/Info.plist"), b.Manifest, 0755); err != nil {
+	if err := os.WriteFile(filepath.Join(binDest, "/Contents/Info.plist"), b.Manifest, 0755); err != nil {
 		return err
 	}
 
@@ -175,7 +185,7 @@ func (b *macBuilder) buildProgram(buildInfo *buildInfo, name string, arch string
 		"build",
 		"-ldflags="+buildInfo.ldflags,
 		"-tags="+buildInfo.tags,
-		"-o", filepath.Join(dest, "/Contents/MacOS/"+name),
+		"-o", filepath.Join(binDest, "/Contents/MacOS/"+name),
 		buildInfo.pkgPath,
 	)
 	cmd.Env = append(
@@ -188,18 +198,13 @@ func (b *macBuilder) buildProgram(buildInfo *buildInfo, name string, arch string
 	return err
 }
 
-func (b *macBuilder) signProgram(buildInfo *buildInfo, name string, arch string) error {
-	dest := b.DestDir
-	if len(buildInfo.archs) > 1 {
-		dest = filepath.Join(filepath.Dir(b.DestDir), name+"_"+arch+".app")
-	}
-
+func (b *macBuilder) signProgram(buildInfo *buildInfo, binDest string, name string, arch string) error {
 	options := filepath.Join(b.TempDir, "ent.ent")
 	if err := os.WriteFile(options, b.Entitlements, 0777); err != nil {
 		return err
 	}
 
-	xattr := exec.Command("xattr", "-rc", dest)
+	xattr := exec.Command("xattr", "-rc", binDest)
 	if _, err := runCmd(xattr); err != nil {
 		return err
 	}
@@ -211,8 +216,22 @@ func (b *macBuilder) signProgram(buildInfo *buildInfo, name string, arch string)
 		"--options", "runtime",
 		"--entitlements", options,
 		"--sign", buildInfo.key,
-		dest,
+		binDest,
 	)
+	_, err := runCmd(cmd)
+	return err
+}
+
+func dittozip(input, output string) error {
+	cmd := exec.Command("ditto", "-c", "-k", "-X", "--rsrc", input, output)
+
+	_, err := runCmd(cmd)
+	return err
+}
+
+func dittounzip(input, output string) error {
+	cmd := exec.Command("ditto", "-x", "-k", "-X", "--rsrc", input, output)
+
 	_, err := runCmd(cmd)
 	return err
 }
