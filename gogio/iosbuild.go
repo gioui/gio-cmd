@@ -190,7 +190,7 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 }
 {{if .Deeplink}}
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options {
-	return [self.controller onDeeplink:url.absoluteString];
+	return [self.controller onOpenURI:url.absoluteString];
 }
 {{end}}
 @end
