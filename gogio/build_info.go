@@ -30,7 +30,7 @@ type buildInfo struct {
 	notaryAppleID  string
 	notaryPassword string
 	notaryTeamID   string
-	deeplink 	   []string
+	schemes 	   []string
 }
 
 type Semver struct {
@@ -52,9 +52,9 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 	if *name != "" {
 		appName = *name
 	}
-	deeplinkSchemes := strings.Split(*deeplink, ",")
-	for i, scheme := range deeplinkSchemes {
-		deeplinkSchemes[i] = strings.TrimSpace(scheme)
+	schemes := strings.Split(*schemes, ",")
+	for i, scheme := range schemes {
+		schemes[i] = strings.TrimSpace(scheme)
 	}
 	ver, err := parseSemver(*version)
 	if err != nil {
@@ -77,7 +77,7 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		notaryAppleID:  *notaryID,
 		notaryPassword: *notaryPass,
 		notaryTeamID:   *notaryTeamID,
-		deeplink: deeplinkSchemes,
+		schemes: schemes,
 	}
 	return bi, nil
 }

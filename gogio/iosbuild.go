@@ -324,7 +324,7 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 		Platform:        platform,
 		MinVersion:      minIOSVersion,
 		SupportPlatform: supportPlatform,
-		Scheme:          bi.deeplink,
+		Scheme:          bi.schemes,
 	}
 
 	tmpl, err := template.New("manifest").Parse(`<?xml version="1.0" encoding="UTF-8"?>

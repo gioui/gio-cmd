@@ -135,7 +135,7 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 		Name:    name,
 		Bundle:  buildInfo.appID,
 		Version: buildInfo.version,
-		Scheme:  buildInfo.deeplink,
+		Scheme:  buildInfo.schemes,
 	}
 
 	t, err := template.New("manifest").Parse(`<?xml version="1.0" encoding="UTF-8"?>

@@ -446,7 +446,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		Features:    features,
 		IconSnip:    iconSnip,
 		AppName:     appName,
-		Scheme:      bi.deeplink,
+		Scheme:      bi.schemes,
 	}
 	tmpl, err := template.New("test").Parse(
 		`<?xml version="1.0" encoding="utf-8"?>
