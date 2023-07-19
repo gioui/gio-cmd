@@ -43,6 +43,7 @@ var exeSuffix string
 type manifestData struct {
 	AppID       string
 	Version     int
+	VersionName string
 	MinSDK      int
 	TargetSDK   int
 	Permissions []string
@@ -440,6 +441,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 	manifestSrc := manifestData{
 		AppID:       bi.appID,
 		Version:     bi.version,
+		VersionName: bi.versionName,
 		MinSDK:      minSDK,
 		TargetSDK:   targetSDK,
 		Permissions: permissions,
@@ -447,12 +449,15 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		IconSnip:    iconSnip,
 		AppName:     appName,
 	}
+	if manifestSrc.VersionName == "" {
+		manifestSrc.VersionName = fmt.Sprintf("1.0.%d", bi.version)
+	}
 	tmpl, err := template.New("test").Parse(
 		`<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="{{.AppID}}"
 	android:versionCode="{{.Version}}"
-	android:versionName="1.0.{{.Version}}">
+	android:versionName="{{.VersionName}}">
 	<uses-sdk android:minSdkVersion="{{.MinSDK}}" android:targetSdkVersion="{{.TargetSDK}}" />
 {{range .Permissions}}	<uses-permission android:name="{{.}}"/>
 {{end}}{{range .Features}}	<uses-feature android:{{.}} android:required="false"/>

@@ -23,6 +23,7 @@ type buildInfo struct {
 	tags           string
 	target         string
 	version        int
+	versionName    string
 	key            string
 	password       string
 	notaryAppleID  string
@@ -56,6 +57,7 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		tags:           *extraTags,
 		target:         *target,
 		version:        *version,
+		versionName:    *versionName,
 		key:            *signKey,
 		password:       *signPass,
 		notaryAppleID:  *notaryID,

@@ -30,6 +30,7 @@ var (
 	appID         = flag.String("appid", "", "app identifier (for -buildmode=exe)")
 	name          = flag.String("name", "", "app name (for -buildmode=exe)")
 	version       = flag.Int("version", 1, "app version (for -buildmode=exe)")
+	versionName   = flag.String("versionname", "", "app version name (for -buildmode=exe)")
 	printCommands = flag.Bool("x", false, "print the commands")
 	keepWorkdir   = flag.Bool("work", false, "print the name of the temporary work directory and do not delete it when exiting.")
 	linkMode      = flag.String("linkmode", "", "set the -linkmode flag of the go tool")

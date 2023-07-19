@@ -44,6 +44,12 @@ func buildWindows(tmpDir string, bi *buildInfo) error {
 	if bi.version > math.MaxUint16 {
 		return fmt.Errorf("version (%d) is larger than the maximum (%d)", bi.version, math.MaxUint16)
 	}
+	versionName := bi.versionName
+	if versionName == "" {
+		versionName = "1.0.0." + version
+	} else if strings.Count(versionName, ".") < 3 {
+		versionName += ".0"
+	}
 
 	for _, arch := range bi.archs {
 		builder.Coff = coff.NewRSRC()
@@ -54,7 +60,7 @@ func buildWindows(tmpDir string, bi *buildInfo) error {
 		}
 
 		if err := builder.embedManifest(windowsManifest{
-			Version:        "1.0.0." + version,
+			Version:        versionName,
 			WindowsVersion: sdk,
 			Name:           name,
 		}); err != nil {
@@ -63,7 +69,7 @@ func buildWindows(tmpDir string, bi *buildInfo) error {
 
 		if err := builder.embedInfo(windowsResources{
 			Version:      [2]uint32{uint32(1) << 16, uint32(bi.version)},
-			VersionHuman: "1.0.0." + version,
+			VersionHuman: versionName,
 			Name:         name,
 			Language:     0x0400, // Process Default Language: https://docs.microsoft.com/en-us/previous-versions/ms957130(v=msdn.10)
 		}); err != nil {
