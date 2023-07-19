@@ -167,9 +167,9 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 	}
 	mainm := filepath.Join(tmpDir, "main.m")
 	mainmSrc := struct {
-		Deeplink []string
+		Schemes []string
 	}{
-		Deeplink: bi.deeplink,
+		Schemes: bi.schemes,
 	}
 
 	mainTmpl, err := template.New("").Parse(`@import UIKit;
@@ -188,11 +188,9 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 	[self.window makeKeyAndVisible];
 	return YES;
 }
-{{if .Deeplink}}
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options {
 	return [self.controller onOpenURI:url.absoluteString];
 }
-{{end}}
 @end
 
 int main(int argc, char * argv[]) {
@@ -362,7 +360,7 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 		Platform:        platform,
 		MinVersion:      minIOSVersion,
 		SupportPlatform: supportPlatform,
-		Scheme:          bi.deeplink,
+		Scheme:          bi.schemes,
 	}
 
 	tmpl, err := template.New("manifest").Parse(`<?xml version="1.0" encoding="UTF-8"?>

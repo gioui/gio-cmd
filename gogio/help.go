@@ -69,5 +69,9 @@ or specifies the name of key on Keychain to sign MacOS app.
 
 The -signpass flag specifies the password of the keystore, ignored if -signkey is not provided.
 
-The -deeplink flag specifies a list of comma separated schemes to be used for deep linking.
+The -schemes flag specifies a list of comma separated URI schemes, which the program can 
+handle. For example, use -schemes yourAppName to get transfer.URLEvent when access URI 
+starting with yourAppName://. It is only supported on Android, iOS, macOS and Windows. 
+On Windows, it will restrict the program to a single instance.
+
 `

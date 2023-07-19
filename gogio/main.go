@@ -38,7 +38,7 @@ var (
 	iconPath      = flag.String("icon", "", "specify an icon for iOS and Android")
 	signKey       = flag.String("signkey", "", "specify the path of the keystore to be used to sign Android apk files.")
 	signPass      = flag.String("signpass", "", "specify the password to decrypt the signkey.")
-	deeplink      = flag.String("deeplink", "", "specify a list of comma separated schemes to be used for deep linking.")
+	schemes       = flag.String("schemes", "", "specify a list of comma separated schemes to be used for deep linking.")
 )
 
 func main() {
