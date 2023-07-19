@@ -204,7 +204,7 @@ func (b *windowsBuilder) buildProgram(buildInfo *buildInfo, name string, arch st
 
 	ldflags := buildInfo.ldflags
 	if buildInfo.deeplink != nil {
-		ldflags += ` -X "gioui.org/app.schemesDeeplink=` + strings.Join(buildInfo.deeplink, ",") + `" `
+		ldflags += ` -X "gioui.org/app.schemesURI=` + strings.Join(buildInfo.deeplink, ",") + `" `
 	}
 
 	cmd := exec.Command(
