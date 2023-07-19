@@ -130,12 +130,12 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 		Name    string
 		Bundle  string
 		Version int
-		Scheme  []string
+		Schemes []string
 	}{
 		Name:    name,
 		Bundle:  buildInfo.appID,
 		Version: buildInfo.version,
-		Scheme:  buildInfo.schemes,
+		Schemes: buildInfo.schemes,
 	}
 
 	t, err := template.New("manifest").Parse(`<?xml version="1.0" encoding="UTF-8"?>
@@ -152,10 +152,10 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 	<true/>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
-    {{if .Scheme}}
+    {{if .Schemes}}
 	<key>CFBundleURLTypes</key>
 	<array>
-	  {{range .Scheme}}
+	  {{range .Schemes}}
 	  <dict>
 		<key>CFBundleURLSchemes</key>
 		<array>

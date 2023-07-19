@@ -315,7 +315,7 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 		Platform        string
 		MinVersion      int
 		SupportPlatform string
-		Scheme          []string
+		Schemes         []string
 	}{
 		AppName:         appName,
 		AppID:           bi.appID,
@@ -324,7 +324,7 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 		Platform:        platform,
 		MinVersion:      minIOSVersion,
 		SupportPlatform: supportPlatform,
-		Scheme:          bi.schemes,
+		Schemes:         bi.schemes,
 	}
 
 	tmpl, err := template.New("manifest").Parse(`<?xml version="1.0" encoding="UTF-8"?>
@@ -384,10 +384,10 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 	<string>1030</string>
 	<key>DTXcodeBuild</key>
 	<string>10G8</string>
-    {{if .Scheme}}
+    {{if .Schemes}}
 	<key>CFBundleURLTypes</key>
 	<array>
-	  {{range .Scheme}}
+	  {{range .Schemes}}
 	  <dict>
 		<key>CFBundleURLSchemes</key>
 		<array>
