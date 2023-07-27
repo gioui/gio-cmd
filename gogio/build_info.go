@@ -25,7 +25,7 @@ type buildInfo struct {
 	version        int
 	key            string
 	password       string
-  schemes  []string
+	schemes        []string
 	notaryAppleID  string
 	notaryPassword string
 	notaryTeamID   string
@@ -63,7 +63,7 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		version:        *version,
 		key:            *signKey,
 		password:       *signPass,
-    schemes:        schemes,
+		schemes:        schemes,
 		notaryAppleID:  *notaryID,
 		notaryPassword: *notaryPass,
 		notaryTeamID:   *notaryTeamID,
