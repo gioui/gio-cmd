@@ -74,4 +74,12 @@ handle. For example, use -schemes yourAppName to get transfer.URLEvent when acce
 starting with yourAppName://. It is only supported on Android, iOS, macOS and Windows. 
 On Windows, it will restrict the program to a single instance.
 
+The -notaryid flag specifies the Apple ID to use for notarization of MacOS app.
+
+The -notarypass flag specifies the password of the Apple ID, ignored if -notaryid is not 
+provided. That must be an app-specific password, see https://support.apple.com/en-us/HT204397 
+for details. If not provided, the password will be prompted.
+
+The -notaryteamid flag specifies the team ID to use for notarization of MacOS app, ignored if
+-notaryid is not provided.
 `
