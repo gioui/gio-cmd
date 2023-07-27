@@ -77,7 +77,7 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		notaryAppleID:  *notaryID,
 		notaryPassword: *notaryPass,
 		notaryTeamID:   *notaryTeamID,
-		schemes: schemes,
+		schemes: 		schemes,
 	}
 	return bi, nil
 }
