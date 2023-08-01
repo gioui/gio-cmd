@@ -115,6 +115,7 @@ func buildAndroid(tmpDir string, bi *buildInfo) error {
 		return err
 	}
 	var extraJars []string
+	var extraAARs []string
 	visitedPkgs := make(map[string]bool)
 	var visitPkg func(*packages.Package) error
 	visitPkg = func(p *packages.Package) error {
@@ -127,6 +128,11 @@ func buildAndroid(tmpDir string, bi *buildInfo) error {
 			return err
 		}
 		extraJars = append(extraJars, jars...)
+		aars, err := filepath.Glob(filepath.Join(dir, "*.aar"))
+		if err != nil {
+			return err
+		}
+		extraAARs = append(extraAARs, aars...)
 		switch {
 		case p.PkgPath == "net":
 			perms = append(perms, "network")
@@ -167,7 +173,7 @@ func buildAndroid(tmpDir string, bi *buildInfo) error {
 			return fmt.Errorf("the specified output %q does not end in '.apk' or '.aab'", file)
 		}
 
-		if err := exeAndroid(tmpDir, tools, bi, extraJars, perms, isBundle); err != nil {
+		if err := exeAndroid(tmpDir, tools, bi, extraJars, extraAARs, perms, isBundle); err != nil {
 			return err
 		}
 		if isBundle {
@@ -336,7 +342,7 @@ func archiveAndroid(tmpDir string, bi *buildInfo, perms []string) (err error) {
 	return aarw.Close()
 }
 
-func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, perms []string, isBundle bool) (err error) {
+func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, extraAARs, perms []string, isBundle bool) (err error) {
 	classes := filepath.Join(tmpDir, "classes")
 	var classFiles []string
 	err = filepath.Walk(classes, func(path string, f os.FileInfo, err error) error {
@@ -348,7 +354,26 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		}
 		return nil
 	})
+
+	// extract the jar files from the aars
+	aarOut := filepath.Join(tmpDir, "aars")
+	for _, aar := range extraAARs {
+		name := filepath.Base(aar)
+		name = strings.TrimSuffix(name, filepath.Ext(name))
+
+		if err := extractZip(filepath.Join(aarOut, name), aar); err != nil {
+			return err
+		}
+	}
+
+	// extract the jar files from the aars
+	jarsFromAAR, err := filepath.Glob(filepath.Join(aarOut, "*", "*.jar"))
+	if err != nil {
+		return err
+	}
+	extraJars = append(extraJars, jarsFromAAR...)
 	classFiles = append(classFiles, extraJars...)
+
 	dexDir := filepath.Join(tmpDir, "apk")
 	if err := os.MkdirAll(dexDir, 0755); err != nil {
 		return err
@@ -434,6 +459,24 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		return err
 	}
 
+	resFromAAR, err := filepath.Glob(filepath.Join(aarOut, "*", "res"))
+	if err != nil {
+		return err
+	}
+
+	for i, res := range resFromAAR {
+		resZip := filepath.Join(tmpDir, fmt.Sprintf("aar-%d-resources.zip", i))
+
+		_, err = runCmd(exec.Command(
+			aapt2,
+			"compile",
+			"-o", resZip,
+			"--dir", res))
+		if err != nil {
+			return err
+		}
+	}
+
 	// Link APK.
 	permissions, features := getPermissions(perms)
 	appName := UppercaseName(bi.name)
@@ -489,6 +532,29 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		return err
 	}
 
+	manifestsFromAAR, err := filepath.Glob(filepath.Join(aarOut, "*", "AndroidManifest.xml"))
+	if err != nil {
+		return err
+	}
+
+	// Merge manifests, if any.
+	if len(manifestsFromAAR) > 0 {
+		if _, err := os.Stat(filepath.Join(tools.buildtools, "manifest-merger.jar")); err != nil {
+			return fmt.Errorf("manifest-merger.jar not found in buildtools. Download it from https://github.com/distriqt/android-manifest-merger and place it in %s", tools.buildtools)
+		}
+
+		cmd := exec.Command("java",
+			"-jar",
+			filepath.Join(tools.buildtools, "manifest-merger.jar"),
+			"--main", manifest,
+			"--libs", strings.Join(manifestsFromAAR, ":"),
+			"--out", manifest,
+		)
+		if _, err := runCmd(cmd); err != nil {
+			return err
+		}
+	}
+
 	linkAPK := filepath.Join(tmpDir, "link.apk")
 
 	args := []string{
@@ -496,9 +562,18 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		"--manifest", manifest,
 		"-I", tools.androidjar,
 		"-o", linkAPK,
+		"--auto-add-overlay",
 	}
 	if isBundle {
 		args = append(args, "--proto-format")
+	}
+
+	allResZip, err := filepath.Glob(filepath.Join(tmpDir, "*-resources.zip"))
+	if err != nil {
+		return err
+	}
+	for _, resZip := range allResZip {
+		args = append(args, "-R", resZip)
 	}
 	args = append(args, resZip)
 
@@ -1053,4 +1128,34 @@ func (w *errWriter) Write(p []byte) (n int, err error) {
 	n, err = w.w.Write(p)
 	*w.err = err
 	return
+}
+
+func extractZip(out string, zipFile string) error {
+	//extract the zip file
+	r, err := zip.OpenReader(zipFile)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(out, f.Name)), 0777); err != nil {
+			return err
+		}
+		if f.FileInfo().IsDir() {
+			continue
+		}
+		out, err := os.Create(filepath.Join(out, f.Name))
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(out, rc); err != nil {
+			return err
+		}
+		rc.Close()
+		out.Close()
+	}
+
+	return nil
 }
