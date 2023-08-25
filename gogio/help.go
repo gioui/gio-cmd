@@ -65,7 +65,8 @@ its deletion.
 The -x flag will print all the external commands executed by the gogio tool.
 
 The -signkey flag specifies the path of the keystore, used for signing Android apk/aab files
-or specifies the name of key on Keychain to sign MacOS app.
+or specifies the name of key on Keychain to sign MacOS app. On iOS/macOS it can be used to
+specify the path of provisioning profile (.mobileprovision/.provisionprofile).
 
 The -signpass flag specifies the password of the keystore, ignored if -signkey is not provided.
 

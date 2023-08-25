@@ -151,7 +151,7 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>CFBundlePackageType</key>
-	<string>APPL</string>
+	<string>BNDL</string>
     {{if .Schemes}}
 	<key>CFBundleURLTypes</key>
 	<array>
@@ -235,6 +235,12 @@ func (b *macBuilder) signProgram(buildInfo *buildInfo, binDest string, name stri
 	xattr := exec.Command("xattr", "-rc", binDest)
 	if _, err := runCmd(xattr); err != nil {
 		return err
+	}
+
+	// If the key is a provisioning profile use the same signing process as iOS
+	if strings.HasSuffix(buildInfo.key, ".provisionprofile") {
+		embedded := filepath.Join(binDest, "Contents", "embedded.provisionprofile")
+		return signApple(buildInfo, b.TempDir, embedded, binDest)
 	}
 
 	cmd := exec.Command(
