@@ -36,7 +36,7 @@ var (
 	extraLdflags  = flag.String("ldflags", "", "extra flags to the Go linker")
 	extraTags     = flag.String("tags", "", "extra tags to the Go tool")
 	iconPath      = flag.String("icon", "", "specify an icon for iOS and Android")
-	signKey       = flag.String("signkey", "", "specify the path of the keystore to be used to sign Android apk files.")
+	signKey       = flag.String("signkey", "", "specify the path of the keystore (Android) or provisioning profile (macOS or iOS) for signing")
 	signPass      = flag.String("signpass", "", "specify the password to decrypt the signkey.")
 	notaryID      = flag.String("notaryid", "", "specify the apple id to use for notarization.")
 	notaryPass    = flag.String("notarypass", "", "specify app-specific password of the Apple ID to be used for notarization.")
