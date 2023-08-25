@@ -74,7 +74,8 @@ func buildIOS(tmpDir, target string, bi *buildInfo) error {
 		if err := exeIOS(tmpDir, target, appDir, bi); err != nil {
 			return err
 		}
-		if err := signIOS(bi, tmpDir, appDir); err != nil {
+		embedded := filepath.Join(appDir, "embedded.mobileprovision")
+		if err := signApple(bi, tmpDir, embedded, appDir); err != nil {
 			return err
 		}
 		return zipDir(out, tmpDir, "Payload")
@@ -83,16 +84,27 @@ func buildIOS(tmpDir, target string, bi *buildInfo) error {
 	}
 }
 
-func signIOS(bi *buildInfo, tmpDir, app string) error {
+// signApple is shared between iOS and macOS.
+func signApple(bi *buildInfo, tmpDir, embedded, app string) error {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
-	provPattern := filepath.Join(home, "Library", "MobileDevice", "Provisioning Profiles", "*.mobileprovision")
-	provisions, err := filepath.Glob(provPattern)
-	if err != nil {
-		return err
+
+	var provisions []string
+	if bi.key != "" {
+		if filepath.Ext(bi.key) != ".mobileprovision" && filepath.Ext(bi.key) != ".provisionprofile" {
+			return fmt.Errorf("sign: on iOS/macOS -key is a provisioning profile, %q does not end in .mobileprovision/.provisionprofile", bi.key)
+		}
+		provisions = []string{bi.key}
+	} else {
+		provPattern := filepath.Join(home, "Library", "MobileDevice", "Provisioning Profiles", "*.mobileprovision")
+		provisions, err = filepath.Glob(provPattern)
+		if err != nil {
+			return err
+		}
 	}
+
 	provInfo := filepath.Join(tmpDir, "provision.plist")
 	var avail []string
 	for _, prov := range provisions {
@@ -116,7 +128,14 @@ func signIOS(bi *buildInfo, tmpDir, app string) error {
 		if err != nil {
 			return err
 		}
-		provAppID, err := runCmd(exec.Command("/usr/libexec/PlistBuddy", "-c", "Print:Entitlements:application-identifier", provInfo))
+
+		// iOS/macOS Catalyst
+		provAppIDSearchKey := "Print:Entitlements:application-identifier"
+		if filepath.Ext(prov) == ".provisionprofile" {
+			// macOS
+			provAppIDSearchKey = "Print:Entitlements:com.apple.application-identifier"
+		}
+		provAppID, err := runCmd(exec.Command("/usr/libexec/PlistBuddy", "-c", provAppIDSearchKey, provInfo))
 		if err != nil {
 			return err
 		}
@@ -126,7 +145,6 @@ func signIOS(bi *buildInfo, tmpDir, app string) error {
 			continue
 		}
 		// Copy provisioning file.
-		embedded := filepath.Join(app, "embedded.mobileprovision")
 		if err := copyFile(embedded, prov); err != nil {
 			return err
 		}
@@ -146,7 +164,15 @@ func signIOS(bi *buildInfo, tmpDir, app string) error {
 		}
 		identity := sha1.Sum(certDER)
 		idHex := hex.EncodeToString(identity[:])
-		_, err = runCmd(exec.Command("codesign", "-s", idHex, "-v", "--entitlements", entFile, app))
+		_, err = runCmd(exec.Command(
+			"codesign",
+			"--sign", idHex,
+			"--deep",
+			"--force",
+			"--options", "runtime",
+			"--entitlements",
+			entFile,
+			app))
 		return err
 	}
 	return fmt.Errorf("sign: no valid provisioning profile found for bundle id %q among %v", bi.appID, avail)
