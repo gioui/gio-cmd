@@ -4,6 +4,7 @@ package main
 
 import (
 	"archive/zip"
+	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
@@ -15,6 +16,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -164,20 +166,30 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 		return err
 	}
 	mainm := filepath.Join(tmpDir, "main.m")
-	const mainmSrc = `@import UIKit;
+	mainmSrc := struct {
+		Schemes []string
+	}{
+		Schemes: bi.schemes,
+	}
+
+	mainTmpl, err := template.New("").Parse(`@import UIKit;
 @import Gio;
 
 @interface GioAppDelegate : UIResponder <UIApplicationDelegate>
 @property (strong, nonatomic) UIWindow *window;
+@property (strong, nonatomic) GioViewController *controller;
 @end
 
 @implementation GioAppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 	self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-	GioViewController *controller = [[GioViewController alloc] initWithNibName:nil bundle:nil];
-	self.window.rootViewController = controller;
+	self.controller = [[GioViewController alloc] initWithNibName:nil bundle:nil];
+	self.window.rootViewController = self.controller;
 	[self.window makeKeyAndVisible];
 	return YES;
+}
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options {
+	return [self.controller onOpenURI:url.absoluteString];
 }
 @end
 
@@ -185,10 +197,20 @@ int main(int argc, char * argv[]) {
 	@autoreleasepool {
 		return UIApplicationMain(argc, argv, nil, NSStringFromClass([GioAppDelegate class]));
 	}
-}`
-	if err := ioutil.WriteFile(mainm, []byte(mainmSrc), 0660); err != nil {
+}`)
+	if err != nil {
 		return err
 	}
+
+	mainmFile, err := os.Create(mainm)
+	if err != nil {
+		return err
+	}
+
+	if err := mainTmpl.Execute(mainmFile, mainmSrc); err != nil {
+		return err
+	}
+
 	appName := strings.Title(bi.name)
 	exe := filepath.Join(app, appName)
 	lipo := exec.Command("xcrun", "lipo", "-o", exe, "-create")
@@ -221,7 +243,10 @@ int main(int argc, char * argv[]) {
 	if _, err := runCmd(lipo); err != nil {
 		return err
 	}
-	infoPlist := buildInfoPlist(bi)
+	infoPlist, err := buildInfoPlist(bi)
+	if err != nil {
+		return err
+	}
 	plistFile := filepath.Join(app, "Info.plist")
 	if err := ioutil.WriteFile(plistFile, []byte(infoPlist), 0660); err != nil {
 		return err
@@ -309,7 +334,7 @@ func iosIcons(bi *buildInfo, tmpDir, appDir, icon string) (string, error) {
 	return assetPlist, err
 }
 
-func buildInfoPlist(bi *buildInfo) string {
+func buildInfoPlist(bi *buildInfo) (string, error) {
 	appName := strings.Title(bi.name)
 	platform := iosPlatformFor(bi.target)
 	var supportPlatform string
@@ -319,36 +344,55 @@ func buildInfoPlist(bi *buildInfo) string {
 	case "tvos":
 		supportPlatform = "AppleTVOS"
 	}
-	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
+
+	manifestSrc := struct {
+		AppName         string
+		AppID           string
+		Version         int
+		Platform        string
+		MinVersion      int
+		SupportPlatform string
+		Schemes         []string
+	}{
+		AppName:         appName,
+		AppID:           bi.appID,
+		Version:         bi.version,
+		Platform:        platform,
+		MinVersion:      minIOSVersion,
+		SupportPlatform: supportPlatform,
+		Schemes:         bi.schemes,
+	}
+
+	tmpl, err := template.New("manifest").Parse(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
-	<string>%s</string>
+	<string>{{.AppName}}</string>
 	<key>CFBundleIdentifier</key>
-	<string>%s</string>
+	<string>{{.AppID}}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>%s</string>
+	<string>{{.AppName}}</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.%d</string>
+	<string>1.0.{{.Version}}</string>
 	<key>CFBundleVersion</key>
-	<string>%d</string>
+	<string>{{.Version}}</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array><string>arm64</string></array>
 	<key>DTPlatformName</key>
-	<string>%s</string>
+	<string>{{.Platform}}</string>
 	<key>DTPlatformVersion</key>
 	<string>12.4</string>
 	<key>MinimumOSVersion</key>
-	<string>%d</string>
+	<string>{{.MinVersion}}</string>
 	<key>UIDeviceFamily</key>
 	<array>
 		<integer>1</integer>
@@ -356,7 +400,7 @@ func buildInfoPlist(bi *buildInfo) string {
 	</array>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
-		<string>%s</string>
+		<string>{{.SupportPlatform}}</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
@@ -371,13 +415,36 @@ func buildInfoPlist(bi *buildInfo) string {
 	<key>DTSDKBuild</key>
 	<string>16G73</string>
 	<key>DTSDKName</key>
-	<string>%s12.4</string>
+	<string>{{.Platform}}12.4</string>
 	<key>DTXcode</key>
 	<string>1030</string>
 	<key>DTXcodeBuild</key>
 	<string>10G8</string>
+    {{if .Schemes}}
+	<key>CFBundleURLTypes</key>
+	<array>
+	  {{range .Schemes}}
+	  <dict>
+		<key>CFBundleURLSchemes</key>
+		<array>
+		  <string>{{.}}</string>
+		</array>
+	  </dict>
+	  {{end}}
+	</array>
+    {{end}}
 </dict>
-</plist>`, appName, bi.appID, appName, bi.version, bi.version, platform, minIOSVersion, supportPlatform, platform)
+</plist>`)
+	if err != nil {
+		return "", err
+	}
+
+	var manifestBuffer bytes.Buffer
+	if err := tmpl.Execute(&manifestBuffer, manifestSrc); err != nil {
+		return "", err
+	}
+
+	return manifestBuffer.String(), nil
 }
 
 func iosPlatformFor(target string) string {
