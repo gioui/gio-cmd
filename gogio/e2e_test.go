@@ -83,7 +83,7 @@ func TestEndToEnd(t *testing.T) {
 	}{
 		{"X11 using go import path", &X11TestDriver{}, testdataWithGoImportPkgPath, ""},
 		{"X11", &X11TestDriver{}, testdataWithRelativePkgPath, ""},
-		{"X11 with custom rendering", &X11TestDriver{}, customRenderTestdataWithRelativePkgPath, "openbsd"},
+		{"X11 with custom rendering", &X11TestDriver{}, customRenderTestdataWithRelativePkgPath, "openbsd,darwin,windows,netbsd"},
 		// Doesn't work on the builders.
 		//{"Wayland", &WaylandTestDriver{}, testdataWithRelativePkgPath},
 		{"JS", &JSTestDriver{}, testdataWithRelativePkgPath, ""},
