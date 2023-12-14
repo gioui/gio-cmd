@@ -25,6 +25,7 @@ type buildInfo struct {
 	version        int
 	key            string
 	password       string
+	schemes        []string
 	notaryAppleID  string
 	notaryPassword string
 	notaryTeamID   string
@@ -44,6 +45,10 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 	if *name != "" {
 		appName = *name
 	}
+	schemes := strings.Split(*schemes, ",")
+	for i, scheme := range schemes {
+		schemes[i] = strings.TrimSpace(scheme)
+	}
 	bi := &buildInfo{
 		appID:          appID,
 		archs:          getArchs(),
@@ -58,6 +63,7 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		version:        *version,
 		key:            *signKey,
 		password:       *signPass,
+		schemes:        schemes,
 		notaryAppleID:  *notaryID,
 		notaryPassword: *notaryPass,
 		notaryTeamID:   *notaryTeamID,
