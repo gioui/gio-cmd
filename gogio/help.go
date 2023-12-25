@@ -69,6 +69,11 @@ or specifies the name of key on Keychain to sign MacOS app.
 
 The -signpass flag specifies the password of the keystore, ignored if -signkey is not provided.
 
+The -schemes flag specifies a list of comma separated URI schemes, which the program can 
+handle. For example, use -schemes yourAppName to get transfer.URLEvent when access URI 
+starting with yourAppName://. It is only supported on Android, iOS, macOS and Windows. 
+On Windows, it will restrict the program to a single instance.
+
 The -notaryid flag specifies the Apple ID to use for notarization of MacOS app.
 
 The -notarypass flag specifies the password of the Apple ID, ignored if -notaryid is not 
