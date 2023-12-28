@@ -319,6 +319,10 @@ func buildInfoPlist(bi *buildInfo) string {
 	case "tvos":
 		supportPlatform = "AppleTVOS"
 	}
+	versionName := bi.versionName
+	if versionName == "" {
+		versionName = fmt.Sprintf("1.0.%d", bi.version)
+	}
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -336,7 +340,7 @@ func buildInfoPlist(bi *buildInfo) string {
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.%d</string>
+	<string>%s</string>
 	<key>CFBundleVersion</key>
 	<string>%d</string>
 	<key>UILaunchStoryboardName</key>
@@ -377,7 +381,7 @@ func buildInfoPlist(bi *buildInfo) string {
 	<key>DTXcodeBuild</key>
 	<string>10G8</string>
 </dict>
-</plist>`, appName, bi.appID, appName, bi.version, bi.version, platform, minIOSVersion, supportPlatform, platform)
+</plist>`, appName, bi.appID, appName, versionName, bi.version, platform, minIOSVersion, supportPlatform, platform)
 }
 
 func iosPlatformFor(target string) string {
