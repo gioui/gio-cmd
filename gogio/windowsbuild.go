@@ -7,12 +7,10 @@ import (
 	"fmt"
 	"image/png"
 	"io"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 	"text/template"
 
@@ -40,10 +38,6 @@ func buildWindows(tmpDir string, bi *buildInfo) error {
 	if sdk > 10 {
 		return fmt.Errorf("invalid minsdk (%d) it's higher than Windows 10", sdk)
 	}
-	version := strconv.Itoa(bi.version)
-	if bi.version > math.MaxUint16 {
-		return fmt.Errorf("version (%d) is larger than the maximum (%d)", bi.version, math.MaxUint16)
-	}
 
 	for _, arch := range bi.archs {
 		builder.Coff = coff.NewRSRC()
@@ -54,7 +48,7 @@ func buildWindows(tmpDir string, bi *buildInfo) error {
 		}
 
 		if err := builder.embedManifest(windowsManifest{
-			Version:        "1.0.0." + version,
+			Version:        bi.version.String(),
 			WindowsVersion: sdk,
 			Name:           name,
 		}); err != nil {
@@ -62,8 +56,8 @@ func buildWindows(tmpDir string, bi *buildInfo) error {
 		}
 
 		if err := builder.embedInfo(windowsResources{
-			Version:      [2]uint32{uint32(1) << 16, uint32(bi.version)},
-			VersionHuman: "1.0.0." + version,
+			Version:      [2]uint32{uint32(bi.version.Major), uint32(bi.version.Minor)<<16 | uint32(bi.version.Patch)},
+			VersionHuman: bi.version.String(),
 			Name:         name,
 			Language:     0x0400, // Process Default Language: https://docs.microsoft.com/en-us/previous-versions/ms957130(v=msdn.10)
 		}); err != nil {

@@ -42,7 +42,7 @@ var exeSuffix string
 
 type manifestData struct {
 	AppID       string
-	Version     int
+	Version     Semver
 	MinSDK      int
 	TargetSDK   int
 	Permissions []string
@@ -451,8 +451,8 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		`<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="{{.AppID}}"
-	android:versionCode="{{.Version}}"
-	android:versionName="1.0.{{.Version}}">
+	android:versionCode="{{.Version.Version32}}"
+	android:versionName="{{.Version}}">
 	<uses-sdk android:minSdkVersion="{{.MinSDK}}" android:targetSdkVersion="{{.TargetSDK}}" />
 {{range .Permissions}}	<uses-permission android:name="{{.}}"/>
 {{end}}{{range .Features}}	<uses-feature android:{{.}} android:required="false"/>

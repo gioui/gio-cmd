@@ -336,7 +336,7 @@ func buildInfoPlist(bi *buildInfo) string {
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.%d</string>
+	<string>%s</string>
 	<key>CFBundleVersion</key>
 	<string>%d</string>
 	<key>UILaunchStoryboardName</key>
@@ -377,7 +377,7 @@ func buildInfoPlist(bi *buildInfo) string {
 	<key>DTXcodeBuild</key>
 	<string>10G8</string>
 </dict>
-</plist>`, appName, bi.appID, appName, bi.version, bi.version, platform, minIOSVersion, supportPlatform, platform)
+</plist>`, appName, bi.appID, appName, bi.version, bi.version.Version32(), platform, minIOSVersion, supportPlatform, platform)
 }
 
 func iosPlatformFor(target string) string {
