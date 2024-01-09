@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 type buildInfo struct {
@@ -72,6 +74,12 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		notaryTeamID:   *notaryTeamID,
 	}
 	return bi, nil
+}
+
+// UppercaseName returns a string with its first rune in uppercase.
+func UppercaseName(name string) string {
+	ch, w := utf8.DecodeRuneInString(name)
+	return string(unicode.ToUpper(ch)) + name[w:]
 }
 
 func (s Semver) String() string {

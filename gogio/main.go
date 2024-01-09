@@ -11,7 +11,6 @@ import (
 	"image/color"
 	"image/png"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -86,7 +85,7 @@ func flagValidate() error {
 }
 
 func build(bi *buildInfo) error {
-	tmpDir, err := ioutil.TempDir("", "gogio-")
+	tmpDir, err := os.MkdirTemp("", "gogio-")
 	if err != nil {
 		return err
 	}

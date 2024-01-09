@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -33,7 +32,7 @@ func buildIOS(tmpDir, target string, bi *buildInfo) error {
 	case "archive":
 		framework := *destPath
 		if framework == "" {
-			framework = fmt.Sprintf("%s.framework", strings.Title(appName))
+			framework = fmt.Sprintf("%s.framework", UppercaseName(appName))
 		}
 		return archiveIOS(tmpDir, target, framework, bi)
 	case "exe":
@@ -142,7 +141,7 @@ func signIOS(bi *buildInfo, tmpDir, app string) error {
 			return err
 		}
 		entFile := filepath.Join(tmpDir, "entitlements.plist")
-		if err := ioutil.WriteFile(entFile, []byte(entitlements), 0660); err != nil {
+		if err := os.WriteFile(entFile, []byte(entitlements), 0660); err != nil {
 			return err
 		}
 		identity := sha1.Sum(certDER)
@@ -186,10 +185,10 @@ int main(int argc, char * argv[]) {
 		return UIApplicationMain(argc, argv, nil, NSStringFromClass([GioAppDelegate class]));
 	}
 }`
-	if err := ioutil.WriteFile(mainm, []byte(mainmSrc), 0660); err != nil {
+	if err := os.WriteFile(mainm, []byte(mainmSrc), 0660); err != nil {
 		return err
 	}
-	appName := strings.Title(bi.name)
+	appName := UppercaseName(bi.name)
 	exe := filepath.Join(app, appName)
 	lipo := exec.Command("xcrun", "lipo", "-o", exe, "-create")
 	var builds errgroup.Group
@@ -223,7 +222,7 @@ int main(int argc, char * argv[]) {
 	}
 	infoPlist := buildInfoPlist(bi)
 	plistFile := filepath.Join(app, "Info.plist")
-	if err := ioutil.WriteFile(plistFile, []byte(infoPlist), 0660); err != nil {
+	if err := os.WriteFile(plistFile, []byte(infoPlist), 0660); err != nil {
 		return err
 	}
 	if _, err := os.Stat(bi.iconPath); err == nil {
@@ -288,7 +287,7 @@ func iosIcons(bi *buildInfo, tmpDir, appDir, icon string) (string, error) {
 	]
 }`
 	contentFile := filepath.Join(appIcon, "Contents.json")
-	if err := ioutil.WriteFile(contentFile, []byte(contentJson), 0600); err != nil {
+	if err := os.WriteFile(contentFile, []byte(contentJson), 0600); err != nil {
 		return "", err
 	}
 	assetPlist := filepath.Join(tmpDir, "assets.plist")
@@ -310,7 +309,7 @@ func iosIcons(bi *buildInfo, tmpDir, appDir, icon string) (string, error) {
 }
 
 func buildInfoPlist(bi *buildInfo) string {
-	appName := strings.Title(bi.name)
+	appName := UppercaseName(bi.name)
 	platform := iosPlatformFor(bi.target)
 	var supportPlatform string
 	switch bi.target {
@@ -475,7 +474,7 @@ func archiveIOS(tmpDir, target, frameworkRoot string, bi *buildInfo) error {
     export *
 }`, framework)
 	moduleFile := filepath.Join(frameworkDir, "Modules", "module.modulemap")
-	return ioutil.WriteFile(moduleFile, []byte(module), 0644)
+	return os.WriteFile(moduleFile, []byte(module), 0644)
 }
 
 func iosCompilerFor(target, arch string, minsdk int) (string, []string, error) {

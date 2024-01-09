@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -45,11 +44,11 @@ func buildJS(bi *buildInfo) error {
 	var faviconPath string
 	if _, err := os.Stat(bi.iconPath); err == nil {
 		// Copy icon to the output folder
-		icon, err := ioutil.ReadFile(bi.iconPath)
+		icon, err := os.ReadFile(bi.iconPath)
 		if err != nil {
 			return err
 		}
-		if err := ioutil.WriteFile(filepath.Join(out, filepath.Base(bi.iconPath)), icon, 0600); err != nil {
+		if err := os.WriteFile(filepath.Join(out, filepath.Base(bi.iconPath)), icon, 0600); err != nil {
 			return err
 		}
 		faviconPath = filepath.Base(bi.iconPath)
@@ -71,7 +70,7 @@ func buildJS(bi *buildInfo) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(out, "index.html"), b.Bytes(), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(out, "index.html"), b.Bytes(), 0600); err != nil {
 		return err
 	}
 

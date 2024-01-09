@@ -10,7 +10,6 @@ import (
 	"image"
 	"image/color"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"runtime"
@@ -316,7 +315,7 @@ func (d *driverBase) needPrograms(names ...string) {
 
 func (d *driverBase) tempDir(name string) string {
 	d.Helper()
-	dir, err := ioutil.TempDir("", name)
+	dir, err := os.MkdirTemp("", name)
 	if err != nil {
 		d.Fatal(err)
 	}

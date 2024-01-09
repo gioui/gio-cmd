@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -405,7 +404,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		if err != nil {
 			return err
 		}
-		err = ioutil.WriteFile(filepath.Join(v26mipmapDir, `ic_launcher.xml`), []byte(`<?xml version="1.0" encoding="utf-8"?>
+		err = os.WriteFile(filepath.Join(v26mipmapDir, `ic_launcher.xml`), []byte(`<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@mipmap/ic_launcher_adaptive" />
     <foreground android:drawable="@mipmap/ic_launcher_adaptive" />
@@ -415,11 +414,11 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		}
 		iconSnip = `android:icon="@mipmap/ic_launcher"`
 	}
-	err = ioutil.WriteFile(filepath.Join(valDir, "themes.xml"), []byte(themes), 0660)
+	err = os.WriteFile(filepath.Join(valDir, "themes.xml"), []byte(themes), 0660)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(v21Dir, "themes.xml"), []byte(themesV21), 0660)
+	err = os.WriteFile(filepath.Join(v21Dir, "themes.xml"), []byte(themesV21), 0660)
 	if err != nil {
 		return err
 	}
@@ -436,7 +435,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 
 	// Link APK.
 	permissions, features := getPermissions(perms)
-	appName := strings.Title(bi.name)
+	appName := UppercaseName(bi.name)
 	manifestSrc := manifestData{
 		AppID:       bi.appID,
 		Version:     bi.version,
@@ -475,7 +474,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		return err
 	}
 	manifest := filepath.Join(tmpDir, "AndroidManifest.xml")
-	if err := ioutil.WriteFile(manifest, manifestBuffer.Bytes(), 0660); err != nil {
+	if err := os.WriteFile(manifest, manifestBuffer.Bytes(), 0660); err != nil {
 		return err
 	}
 
@@ -991,12 +990,12 @@ func (z *zipWriter) Close() error {
 
 func (z *zipWriter) Create(name string) io.Writer {
 	if z.err != nil {
-		return ioutil.Discard
+		return io.Discard
 	}
 	w, err := z.w.Create(name)
 	if err != nil {
 		z.err = err
-		return ioutil.Discard
+		return io.Discard
 	}
 	return &errWriter{w: w, err: &z.err}
 }
