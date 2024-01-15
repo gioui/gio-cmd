@@ -203,6 +203,7 @@ int main(int argc, char * argv[]) {
 		compile.Args = append(compile.Args,
 			"-Werror",
 			"-fmodules",
+			"-lresolv",
 			"-fobjc-arc",
 			"-x", "objective-c",
 			"-F", tmpDir,
