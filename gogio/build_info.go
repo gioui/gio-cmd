@@ -33,8 +33,8 @@ type buildInfo struct {
 }
 
 type Semver struct {
-	Major        uint16
-	Minor, Patch uint8
+	Major, Minor, Patch int
+	VersionCode         uint32
 }
 
 func newBuildInfo(pkgPath string) (*buildInfo, error) {
@@ -83,19 +83,12 @@ func UppercaseName(name string) string {
 }
 
 func (s Semver) String() string {
-	return fmt.Sprintf("%d.%d.%d", s.Major, s.Minor, s.Patch)
-}
-
-// Version32 returns a 32-bit integer version packed as such:
-//
-//	major<<16 | minor<<8 | patch
-func (s Semver) Version32() uint32 {
-	return uint32(s.Major)<<16 | uint32(s.Minor)<<8 | uint32(s.Patch)
+	return fmt.Sprintf("%d.%d.%d.%d", s.Major, s.Minor, s.Patch, s.VersionCode)
 }
 
 func parseSemver(v string) (Semver, error) {
 	var sv Semver
-	_, err := fmt.Sscanf(v, "%d.%d.%d", &sv.Major, &sv.Minor, &sv.Patch)
+	_, err := fmt.Sscanf(v, "%d.%d.%d.%d", &sv.Major, &sv.Minor, &sv.Patch, &sv.VersionCode)
 	if err != nil {
 		return Semver{}, fmt.Errorf("invalid semver: %q", v)
 	}

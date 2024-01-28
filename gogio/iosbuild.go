@@ -377,7 +377,7 @@ func buildInfoPlist(bi *buildInfo) string {
 	<key>DTXcodeBuild</key>
 	<string>10G8</string>
 </dict>
-</plist>`, appName, bi.appID, appName, bi.version, bi.version.Version32(), platform, minIOSVersion, supportPlatform, platform)
+</plist>`, appName, bi.appID, appName, bi.version, bi.version.VersionCode, platform, minIOSVersion, supportPlatform, platform)
 }
 
 func iosPlatformFor(target string) string {

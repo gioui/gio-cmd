@@ -450,7 +450,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		`<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="{{.AppID}}"
-	android:versionCode="{{.Version.Version32}}"
+	android:versionCode="{{.Version.VersionCode}}"
 	android:versionName="{{.Version}}">
 	<uses-sdk android:minSdkVersion="{{.MinSDK}}" android:targetSdkVersion="{{.TargetSDK}}" />
 {{range .Permissions}}	<uses-permission android:name="{{.}}"/>

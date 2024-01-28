@@ -28,7 +28,7 @@ var (
 	destPath      = flag.String("o", "", "output file or directory.\nFor -target ios or tvos, use the .app suffix to target simulators.")
 	appID         = flag.String("appid", "", "app identifier (for -buildmode=exe)")
 	name          = flag.String("name", "", "app name (for -buildmode=exe)")
-	version       = flag.String("version", "1.0.0", "semver app version (for -buildmode=exe) on the form major.minor.patch")
+	version       = flag.String("version", "1.0.0.1", "semver app version (for -buildmode=exe) on the form major.minor.patch.versioncode")
 	printCommands = flag.Bool("x", false, "print the commands")
 	keepWorkdir   = flag.Bool("work", false, "print the name of the temporary work directory and do not delete it when exiting.")
 	linkMode      = flag.String("linkmode", "", "set the -linkmode flag of the go tool")
