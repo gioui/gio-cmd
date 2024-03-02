@@ -20,7 +20,9 @@ import (
 )
 
 const (
-	minIOSVersion = 10
+	minIOSVersion  = 10
+	// Some Metal features require tvOS 11
+	minTVOSVersion = 11
 	// Metal is available from iOS 8 on devices, yet from version 13 on the
 	// simulator.
 	minSimulatorVersion = 13
@@ -496,6 +498,9 @@ func iosCompilerFor(target, arch string, minsdk int) (string, []string, error) {
 		platformSDK += "os"
 		if minsdk == 0 {
 			minsdk = minIOSVersion
+			if target == "tvos" {
+				minsdk = minTVOSVersion
+			}
 		}
 	case "386", "amd64":
 		platformOS += "-simulator"
