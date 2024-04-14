@@ -10,8 +10,8 @@ import (
 	"log"
 
 	"gioui.org/app"
+	"gioui.org/io/event"
 	"gioui.org/io/pointer"
-	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -20,7 +20,7 @@ import (
 
 func main() {
 	go func() {
-		w := app.NewWindow()
+		w := new(app.Window)
 		if err := loop(w); err != nil {
 			log.Fatal(err)
 		}
@@ -61,12 +61,12 @@ func loop(w *app.Window) error {
 
 	var ops op.Ops
 	for {
-		e := <-w.Events()
+		e := w.Event()
 		switch e := e.(type) {
-		case system.DestroyEvent:
+		case app.DestroyEvent:
 			return e.Err
-		case system.FrameEvent:
-			gtx := layout.NewContext(&ops, e)
+		case app.FrameEvent:
+			gtx := app.NewContext(&ops, e)
 			// Clear background to white, even on embedded platforms such as webassembly.
 			paint.Fill(gtx.Ops, color.NRGBA{A: 0xff, R: 0xff, G: 0xff, B: 0xff})
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -126,13 +126,18 @@ func (w *quarterWidget) Layout(gtx layout.Context) layout.Dimensions {
 	defer clip.Rect(image.Rectangle{
 		Max: image.Pt(gtx.Constraints.Max.X, gtx.Constraints.Max.Y),
 	}).Push(gtx.Ops).Pop()
-	pointer.InputOp{
-		Tag:   w,
-		Types: pointer.Press,
-	}.Add(gtx.Ops)
+	event.Op(gtx.Ops, w)
+	filter := pointer.Filter{
+		Target: w,
+		Kinds:  pointer.Press,
+	}
 
-	for _, e := range gtx.Events(w) {
-		if e, ok := e.(pointer.Event); ok && e.Type == pointer.Press {
+	for {
+		e, ok := gtx.Event(filter)
+		if !ok {
+			break
+		}
+		if e, ok := e.(pointer.Event); ok && e.Kind == pointer.Press {
 			w.clicked = !w.clicked
 			// notify when we're done updating the frame.
 			notify = notifyInvalidate
