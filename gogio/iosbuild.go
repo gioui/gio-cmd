@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	minIOSVersion  = 10
+	minIOSVersion = 10
 	// Some Metal features require tvOS 11
 	minTVOSVersion = 11
 	// Metal is available from iOS 8 on devices, yet from version 13 on the
@@ -57,10 +57,6 @@ func buildIOS(tmpDir, target string, bi *buildInfo) error {
 			}
 
 			bi.archs = append(bi.archs[:i], bi.archs[i+1:]...)
-		}
-		tmpFramework := filepath.Join(tmpDir, "Gio.framework")
-		if err := archiveIOS(tmpDir, target, tmpFramework, bi); err != nil {
-			return err
 		}
 		if !forDevice && !strings.HasSuffix(out, ".app") {
 			return fmt.Errorf("the specified output directory %q does not end in .app or .ipa", out)
@@ -164,32 +160,6 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 	if err := os.Mkdir(app, 0755); err != nil {
 		return err
 	}
-	mainm := filepath.Join(tmpDir, "main.m")
-	const mainmSrc = `@import UIKit;
-@import Gio;
-
-@interface GioAppDelegate : UIResponder <UIApplicationDelegate>
-@property (strong, nonatomic) UIWindow *window;
-@end
-
-@implementation GioAppDelegate
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-	self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-	GioViewController *controller = [[GioViewController alloc] initWithNibName:nil bundle:nil];
-	self.window.rootViewController = controller;
-	[self.window makeKeyAndVisible];
-	return YES;
-}
-@end
-
-int main(int argc, char * argv[]) {
-	@autoreleasepool {
-		return UIApplicationMain(argc, argv, nil, NSStringFromClass([GioAppDelegate class]));
-	}
-}`
-	if err := os.WriteFile(mainm, []byte(mainmSrc), 0660); err != nil {
-		return err
-	}
 	appName := UppercaseName(bi.name)
 	exe := filepath.Join(app, appName)
 	lipo := exec.Command("xcrun", "lipo", "-o", exe, "-create")
@@ -199,18 +169,28 @@ int main(int argc, char * argv[]) {
 		if err != nil {
 			return err
 		}
+		cflags = append(cflags,
+			"-fobjc-arc",
+		)
+		cflagsLine := strings.Join(cflags, " ")
 		exeSlice := filepath.Join(tmpDir, "app-"+a)
 		lipo.Args = append(lipo.Args, exeSlice)
-		compile := exec.Command(clang, cflags...)
-		compile.Args = append(compile.Args,
-			"-Werror",
-			"-fmodules",
-			"-lresolv",
-			"-fobjc-arc",
-			"-x", "objective-c",
-			"-F", tmpDir,
+		compile := exec.Command(
+			"go",
+			"build",
+			"-ldflags=-s -w "+bi.ldflags,
 			"-o", exeSlice,
-			mainm,
+			"-tags", bi.tags,
+			bi.pkgPath,
+		)
+		compile.Env = append(
+			os.Environ(),
+			"GOOS=ios",
+			"GOARCH="+a,
+			"CGO_ENABLED=1",
+			"CC="+clang,
+			"CGO_CFLAGS="+cflagsLine,
+			"CGO_LDFLAGS=-lresolv "+cflagsLine,
 		)
 		builds.Go(func() error {
 			_, err := runCmd(compile)
