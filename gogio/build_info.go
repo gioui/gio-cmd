@@ -18,6 +18,7 @@ type buildInfo struct {
 	archs          []string
 	ldflags        string
 	minsdk         int
+	targetsdk      int
 	name           string
 	pkgDir         string
 	pkgPath        string
@@ -60,6 +61,7 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		archs:          getArchs(),
 		ldflags:        getLdFlags(appID),
 		minsdk:         *minsdk,
+		targetsdk:      *targetsdk,
 		name:           appName,
 		pkgDir:         pkgMetadata.Dir,
 		pkgPath:        pkgPath,

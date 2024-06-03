@@ -24,6 +24,7 @@ var (
 	target        = flag.String("target", "", "specify target (ios, tvos, android, js).\n")
 	archNames     = flag.String("arch", "", "specify architecture(s) to include (arm, arm64, amd64).")
 	minsdk        = flag.Int("minsdk", 0, "specify the minimum supported operating system level")
+	targetsdk     = flag.Int("targetsdk", 0, "specify the target supported operating system level for Android")
 	buildMode     = flag.String("buildmode", "exe", "specify buildmode (archive, exe)")
 	destPath      = flag.String("o", "", "output file or directory.\nFor -target ios or tvos, use the .app suffix to target simulators.")
 	appID         = flag.String("appid", "", "app identifier (for -buildmode=exe)")

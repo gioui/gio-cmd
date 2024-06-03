@@ -59,6 +59,9 @@ use -mindk 10 to target Windows 10 and later, -minsdk 6 for Windows Vista and la
 For iOS builds the -minsdk flag specify the minimum iOS version. For example, 
 use -mindk 15 to target iOS 15.0 and later.
 
+For Android builds the -targetsdk flag specify the target SDK level. For example,
+use -targetsdk 33 to target Android 13 (Tiramisu) and later.
+
 The -work flag prints the path to the working directory and suppress
 its deletion.
 
