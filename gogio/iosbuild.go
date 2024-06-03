@@ -311,7 +311,7 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 		AppName         string
 		AppID           string
 		Version         string
-		VersionCode 	uint32
+		VersionCode     uint32
 		Platform        string
 		MinVersion      int
 		SupportPlatform string
@@ -320,7 +320,7 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 		AppName:         appName,
 		AppID:           bi.appID,
 		Version:         bi.version.String(),
-		VersionCode: 	 bi.version.VersionCode,
+		VersionCode:     bi.version.VersionCode,
 		Platform:        platform,
 		MinVersion:      minIOSVersion,
 		SupportPlatform: supportPlatform,

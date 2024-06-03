@@ -129,7 +129,7 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 	manifestSrc := struct {
 		Name    string
 		Bundle  string
-		Version int
+		Version Semver
 		Schemes []string
 	}{
 		Name:    name,
