@@ -352,14 +352,17 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 	if err := os.MkdirAll(dexDir, 0755); err != nil {
 		return err
 	}
-	// https://developer.android.com/distribute/best-practices/develop/target-sdk
-	targetSDK := 31
-	if bi.minsdk > targetSDK {
-		targetSDK = bi.minsdk
-	}
 	minSDK := 16
 	if bi.minsdk > minSDK {
 		minSDK = bi.minsdk
+	}
+	// https://developer.android.com/distribute/best-practices/develop/target-sdk
+	targetSDK := 33
+	if bi.targetsdk > 0 {
+		targetSDK = bi.targetsdk
+	}
+	if minSDK > targetSDK {
+		targetSDK = minSDK
 	}
 	if len(classFiles) > 0 {
 		d8 := exec.Command(
