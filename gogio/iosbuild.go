@@ -400,12 +400,12 @@ func buildInfoPlist(bi *buildInfo) (string, error) {
 </dict>
 </plist>`)
 	if err != nil {
-		return "", err
+		panic(err)
 	}
 
 	var manifestBuffer bytes.Buffer
 	if err := tmpl.Execute(&manifestBuffer, manifestSrc); err != nil {
-		return "", err
+		panic(err)
 	}
 
 	return manifestBuffer.String(), nil

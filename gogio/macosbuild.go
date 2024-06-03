@@ -168,12 +168,12 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 </dict>
 </plist>`)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	var manifest bytes.Buffer
 	if err := t.Execute(&manifest, manifestSrc); err != nil {
-		return err
+		panic(err)
 	}
 	b.Manifest = manifest.Bytes()
 

@@ -463,6 +463,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 			android:theme="@style/Theme.GioApp"
 			android:configChanges="screenSize|screenLayout|smallestScreenSize|orientation|keyboardHidden"
 			android:windowSoftInputMode="adjustResize"
+			android:launchMode= "singleInstance"
 			android:exported="true">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
