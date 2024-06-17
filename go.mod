@@ -1,9 +1,9 @@
 module gioui.org/cmd
 
-go 1.19
+go 1.21
 
 require (
-	gioui.org v0.6.0
+	gioui.org v0.7.0
 	github.com/akavel/rsrc v0.10.1
 	github.com/chromedp/cdproto v0.0.0-20191114225735-6626966fbae4
 	github.com/chromedp/chromedp v0.5.2
