@@ -68,7 +68,8 @@ its deletion.
 The -x flag will print all the external commands executed by the gogio tool.
 
 The -signkey flag specifies the path of the keystore, used for signing Android apk/aab files
-or specifies the name of key on Keychain to sign MacOS app.
+or specifies the name of key on Keychain to sign MacOS app. On iOS/macOS it can be used to
+specify the path of provisioning profile (.mobileprovision/.provisionprofile).
 
 The -signpass flag specifies the password of the keystore, ignored if -signkey is not provided.
 
@@ -80,4 +81,9 @@ for details. If not provided, the password will be prompted.
 
 The -notaryteamid flag specifies the team ID to use for notarization of MacOS app, ignored if
 -notaryid is not provided.
+
+The -schemes flag specifies a list of comma separated URI schemes that the program can 
+handle. For example, use -schemes yourAppName to receive a transfer.URLEvent for URIs 
+starting with yourAppName://. It is only supported on Android, iOS, macOS and Windows. 
+On Windows, it will restrict the program to a single instance.
 `
