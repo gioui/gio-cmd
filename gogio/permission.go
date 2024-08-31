@@ -22,6 +22,9 @@ var AndroidPermissions = map[string][]string{
 	"wakelock": {
 		"android.permission.WAKE_LOCK",
 	},
+	"foreground": {
+		"android.permission.FOREGROUND_SERVICE",
+	},
 }
 
 var AndroidFeatures = map[string][]string{
