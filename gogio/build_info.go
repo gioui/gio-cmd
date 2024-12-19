@@ -94,6 +94,11 @@ func (s Semver) String() string {
 	return fmt.Sprintf("%d.%d.%d.%d", s.Major, s.Minor, s.Patch, s.VersionCode)
 }
 
+func (s Semver) StringCompact() string {
+	// Used to meet CFBundleShortVersionString format.
+	return fmt.Sprintf("%d.%d.%d", s.Major, s.Minor, s.Patch)
+}
+
 func parseSemver(v string) (Semver, error) {
 	var sv Semver
 	_, err := fmt.Sscanf(v, "%d.%d.%d.%d", &sv.Major, &sv.Minor, &sv.Patch, &sv.VersionCode)

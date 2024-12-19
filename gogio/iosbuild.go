@@ -202,6 +202,7 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 		}
 		cflags = append(cflags,
 			"-fobjc-arc",
+			fmt.Sprintf("-miphoneos-version-min=%d.0", bi.minsdk),
 		)
 		cflagsLine := strings.Join(cflags, " ")
 		exeSlice := filepath.Join(tmpDir, "app-"+a)
@@ -271,6 +272,9 @@ func iosIcons(bi *buildInfo, tmpDir, appDir, icon string) (string, error) {
 	err := buildIcons(appIcon, icon, []iconVariant{
 		{path: "ios_2x.png", size: 120},
 		{path: "ios_3x.png", size: 180},
+		{path: "ipad_1x.png", size: 76},
+		{path: "ipad_2x.png", size: 152},
+		{path: "ipad_4x.png", size: 228},
 		// The App Store icon is not allowed to contain
 		// transparent pixels.
 		{path: "ios_store.png", size: 1024, fill: true},
@@ -279,26 +283,44 @@ func iosIcons(bi *buildInfo, tmpDir, appDir, icon string) (string, error) {
 		return "", err
 	}
 	contentJson := `{
-	"images" : [
-		{
-			"size" : "60x60",
-			"idiom" : "iphone",
-			"filename" : "ios_2x.png",
-			"scale" : "2x"
-		},
-		{
-			"size" : "60x60",
-			"idiom" : "iphone",
-			"filename" : "ios_3x.png",
-			"scale" : "3x"
-		},
-		{
-			"size" : "1024x1024",
-			"idiom" : "ios-marketing",
-			"filename" : "ios_store.png",
-			"scale" : "1x"
-		}
-	]
+"images": [
+    {
+        "size": "60x60",
+        "idiom": "iphone",
+        "filename": "ios_2x.png",
+        "scale": "2x"
+    },
+    {
+        "size": "60x60",
+        "idiom": "iphone",
+        "filename": "ios_3x.png",
+        "scale": "3x"
+    },
+    {
+        "size": "76x76",
+        "idiom": "ipad",
+        "filename": "ipad_1x.png",
+        "scale": "1x"
+    },
+    {
+        "size": "76x76",
+        "idiom": "ipad",
+        "filename": "ipad_2x.png",
+        "scale": "2x"
+    },
+    {
+        "size": "152x152",
+        "idiom": "ipad",
+        "filename": "ipad_4x.png",
+        "scale": "2x"
+    },
+    {
+        "size": "1024x1024",
+        "idiom": "ios-marketing",
+        "filename": "ios_store.png",
+        "scale": "1x"
+    }
+]
 }`
 	contentFile := filepath.Join(appIcon, "Contents.json")
 	if err := os.WriteFile(contentFile, []byte(contentJson), 0o600); err != nil {
@@ -345,10 +367,10 @@ func buildInfoPlist(bi *buildInfo) string {
 	}{
 		AppName:         appName,
 		AppID:           bi.appID,
-		Version:         bi.version.String(),
+		Version:         bi.version.StringCompact(),
 		VersionCode:     bi.version.VersionCode,
 		Platform:        platform,
-		MinVersion:      minIOSVersion,
+		MinVersion:      bi.minsdk,
 		SupportPlatform: supportPlatform,
 		Schemes:         bi.schemes,
 	}
@@ -382,7 +404,7 @@ func buildInfoPlist(bi *buildInfo) string {
 	<key>DTPlatformVersion</key>
 	<string>12.4</string>
 	<key>MinimumOSVersion</key>
-	<string>{{.MinVersion}}</string>
+	<string>{{.MinVersion}}.0</string>
 	<key>UIDeviceFamily</key>
 	<array>
 		<integer>1</integer>
@@ -395,9 +417,12 @@ func buildInfoPlist(bi *buildInfo) string {
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>DTCompiler</key>
 	<string>com.apple.compilers.llvm.clang.1_0</string>
 	<key>DTPlatformBuild</key>
@@ -410,6 +435,8 @@ func buildInfoPlist(bi *buildInfo) string {
 	<string>1030</string>
 	<key>DTXcodeBuild</key>
 	<string>10G8</string>
+	<key>UILaunchScreen</key>
+	<true/>
     {{if .Schemes}}
 	<key>CFBundleURLTypes</key>
 	<array>
@@ -575,7 +602,6 @@ func iosCompilerFor(target, arch string, minsdk int) (string, []string, error) {
 		return "", nil, err
 	}
 	cflags := []string{
-		"-fembed-bitcode",
 		"-arch", allArchs[arch].iosArch,
 		"-isysroot", sdkPath,
 		"-m" + platformOS + "-version-min=" + strconv.Itoa(minsdk),
