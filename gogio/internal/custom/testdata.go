@@ -20,8 +20,8 @@ import (
 
 	"gioui.org/app"
 	"gioui.org/gpu"
+	"gioui.org/io/event"
 	"gioui.org/io/pointer"
-	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -98,7 +98,8 @@ type eglContext struct {
 func main() {
 	go func() {
 		// Set CustomRenderer so we can provide our own rendering context.
-		w := app.NewWindow(app.CustomRenderer(true))
+		w := new(app.Window)
+		w.Option(app.CustomRenderer(true))
 		if err := loop(w); err != nil {
 			log.Fatal(err)
 		}
@@ -164,17 +165,17 @@ func loop(w *app.Window) error {
 
 	// eglMakeCurrent binds a context to an operating system thread. Prevent Go from switching thread.
 	runtime.LockOSThread()
-	for e := range w.Events() {
-		switch e := e.(type) {
+	for {
+		switch e := w.Event().(type) {
 		case app.ViewEvent:
 			ve = e
 			init = true
 			if size != (image.Point{}) {
 				recreateContext()
 			}
-		case system.DestroyEvent:
+		case app.DestroyEvent:
 			return e.Err
-		case system.FrameEvent:
+		case app.FrameEvent:
 			if init && size != e.Size {
 				size = e.Size
 				recreateContext()
@@ -183,7 +184,7 @@ func loop(w *app.Window) error {
 				break
 			}
 			// Build ops.
-			gtx := layout.NewContext(&ops, e)
+			gtx := app.NewContext(&ops, e)
 
 			// Clear background to white, even on embedded platforms such as webassembly.
 			paint.Fill(gtx.Ops, color.NRGBA{A: 0xff, R: 0xff, G: 0xff, B: 0xff})
@@ -205,7 +206,7 @@ func loop(w *app.Window) error {
 					)
 				}),
 			)
-			op.InvalidateOp{}.Add(gtx.Ops)
+			gtx.Execute(op.InvalidateCmd{})
 			log.Println("frame")
 
 			// Trigger window resize detection in ANGLE.
@@ -351,13 +352,16 @@ func (w *quarterWidget) Layout(gtx layout.Context) layout.Dimensions {
 	defer clip.Rect(image.Rectangle{
 		Max: image.Pt(gtx.Constraints.Max.X, gtx.Constraints.Max.Y),
 	}).Push(gtx.Ops).Pop()
-	pointer.InputOp{
-		Tag:   w,
-		Types: pointer.Press,
-	}.Add(gtx.Ops)
-
-	for _, e := range gtx.Events(w) {
-		if e, ok := e.(pointer.Event); ok && e.Type == pointer.Press {
+	event.Op(gtx.Ops, w)
+	for {
+		e, ok := gtx.Event(pointer.Filter{
+			Target: w,
+			Kinds:  pointer.Press,
+		})
+		if !ok {
+			break
+		}
+		if e, ok := e.(pointer.Event); ok && e.Kind == pointer.Press {
 			w.clicked = !w.clicked
 			// notify when we're done updating the frame.
 			notify = notifyInvalidate
