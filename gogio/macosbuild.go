@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -124,6 +125,19 @@ func (b *macBuilder) setIcon(path string) (err error) {
 }
 
 func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
+
+	manifestSrc := struct {
+		Name    string
+		Bundle  string
+		Version Semver
+		Schemes []string
+	}{
+		Name:    name,
+		Bundle:  buildInfo.appID,
+		Version: buildInfo.version,
+		Schemes: buildInfo.schemes,
+	}
+
 	t, err := template.New("manifest").Parse(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -137,21 +151,29 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>CFBundlePackageType</key>
-	<string>APPL</string>
+	<string>BNDL</string>
+    {{if .Schemes}}
+	<key>CFBundleURLTypes</key>
+	<array>
+	  {{range .Schemes}}
+	  <dict>
+		<key>CFBundleURLSchemes</key>
+		<array>
+		  <string>{{.}}</string>
+		</array>
+	  </dict>
+	  {{end}}
+	</array>
+    {{end}}
 </dict>
 </plist>`)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	var manifest bufferCoff
-	if err := t.Execute(&manifest, struct {
-		Name, Bundle string
-	}{
-		Name:   name,
-		Bundle: buildInfo.appID,
-	}); err != nil {
-		return err
+	var manifest bytes.Buffer
+	if err := t.Execute(&manifest, manifestSrc); err != nil {
+		panic(err)
 	}
 	b.Manifest = manifest.Bytes()
 
@@ -213,6 +235,12 @@ func (b *macBuilder) signProgram(buildInfo *buildInfo, binDest string, name stri
 	xattr := exec.Command("xattr", "-rc", binDest)
 	if _, err := runCmd(xattr); err != nil {
 		return err
+	}
+
+	// If the key is a provisioning profile use the same signing process as iOS
+	if strings.HasSuffix(buildInfo.key, ".provisionprofile") {
+		embedded := filepath.Join(binDest, "Contents", "embedded.provisionprofile")
+		return signApple(buildInfo, b.TempDir, embedded, binDest)
 	}
 
 	cmd := exec.Command(
