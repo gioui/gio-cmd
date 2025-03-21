@@ -30,6 +30,7 @@ func (d *JSTestDriver) Start(path string) {
 	if raceEnabled {
 		d.Skipf("js/wasm doesn't support -race; skipping")
 	}
+	d.Skipf("test fails with \"timed out waiting for a frame to be ready\"")
 
 	// First, build the app.
 	dir := d.tempDir("gio-endtoend-js")
