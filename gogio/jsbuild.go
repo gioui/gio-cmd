@@ -78,9 +78,14 @@ func buildJS(bi *buildInfo) error {
 	if err != nil {
 		return err
 	}
-	wasmJS := filepath.Join(goroot, "misc", "wasm", "wasm_exec.js")
+	// Location of the wasm_exec.js for go>=1.24
+	wasmJS := filepath.Join(goroot, "lib", "wasm", "wasm_exec.js")
 	if _, err := os.Stat(wasmJS); err != nil {
-		return fmt.Errorf("failed to find $GOROOT/misc/wasm/wasm_exec.js driver: %v", err)
+		// Location of the wasm_exec.js for go<1.24
+		wasmJS = filepath.Join(goroot, "misc", "wasm", "wasm_exec.js")
+		if _, err := os.Stat(wasmJS); err != nil {
+			return fmt.Errorf("failed to find $GOROOT/misc/wasm/wasm_exec.js driver: %v", err)
+		}
 	}
 	pkgs, err := packages.Load(&packages.Config{
 		Mode: packages.NeedName | packages.NeedFiles | packages.NeedImports | packages.NeedDeps,
