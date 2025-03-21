@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Unlicense OR MIT
-image: debian/bookworm
+image: debian/testing
 packages:
  - curl
  - pkg-config
@@ -56,8 +56,8 @@ tasks:
      # mirror to github
      ssh-keyscan github.com > "$HOME"/.ssh/known_hosts && cd gio-cmd && git push --mirror "$github_mirror" || echo "failed mirroring"
  - install_chrome: |
-     curl -s https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-     sudo sh -c 'echo "deb [arch=amd64] https://dl-ssl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+     sudo curl -o /etc/apt/keyrings/google.pub -s https://dl.google.com/linux/linux_signing_key.pub
+     sudo sh -c 'echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google.pub] https://dl-ssl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
      sudo apt-get -qq update
      sudo apt-get -qq install -y google-chrome-stable
  - test: |
