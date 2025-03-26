@@ -31,6 +31,7 @@ type buildInfo struct {
 	notaryAppleID  string
 	notaryPassword string
 	notaryTeamID   string
+	schemes 	   []string
 }
 
 type Semver struct {
@@ -51,6 +52,10 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 	appName := getPkgName(pkgMetadata)
 	if *name != "" {
 		appName = *name
+	}
+	schemes := strings.Split(*schemes, ",")
+	for i, scheme := range schemes {
+		schemes[i] = strings.TrimSpace(scheme)
 	}
 	ver, err := parseSemver(*version)
 	if err != nil {
@@ -74,6 +79,7 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		notaryAppleID:  *notaryID,
 		notaryPassword: *notaryPass,
 		notaryTeamID:   *notaryTeamID,
+		schemes: 		schemes,
 	}
 	return bi, nil
 }
