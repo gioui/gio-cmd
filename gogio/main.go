@@ -199,7 +199,7 @@ func buildIcons(baseDir, icon string, variants []iconVariant) error {
 		v := v
 		resizes.Go(func() (err error) {
 			path := filepath.Join(baseDir, v.path)
-			if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+			if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 				return err
 			}
 			f, err := os.Create(path)

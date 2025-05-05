@@ -358,7 +358,7 @@ const (
 	valueText   uint16 = 1
 )
 
-func newValue(valueType uint16, key string, input interface{}) windowsInfoValue {
+func newValue(valueType uint16, key string, input any) windowsInfoValue {
 	v := windowsInfoValue{
 		Type:   valueType,
 		Length: 6,

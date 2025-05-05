@@ -121,7 +121,7 @@ func (d *AndroidTestDriver) tryUninstall() {
 	}
 }
 
-func (d *AndroidTestDriver) adb(args ...interface{}) []byte {
+func (d *AndroidTestDriver) adb(args ...any) []byte {
 	strs := []string{}
 	for _, arg := range args {
 		strs = append(strs, fmt.Sprint(arg))

@@ -10,14 +10,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"go/format"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"unicode"
-
-	"go/format"
 
 	"gioui.org/f32"
 )
