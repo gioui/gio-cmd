@@ -61,7 +61,7 @@ func (d *JSTestDriver) Start(path string) {
 	pr, pw := io.Pipe()
 	d.Cleanup(func() { pw.Close() })
 	d.output = pr
-	chromedp.ListenTarget(ctx, func(ev interface{}) {
+	chromedp.ListenTarget(ctx, func(ev any) {
 		switch ev := ev.(type) {
 		case *runtime.EventConsoleAPICalled:
 			switch ev.Type {

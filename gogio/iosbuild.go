@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -56,7 +57,7 @@ func buildIOS(tmpDir, target string, bi *buildInfo) error {
 				}
 			}
 
-			bi.archs = append(bi.archs[:i], bi.archs[i+1:]...)
+			bi.archs = slices.Delete(bi.archs, i, i+1)
 		}
 		if !forDevice && !strings.HasSuffix(out, ".app") {
 			return fmt.Errorf("the specified output directory %q does not end in .app or .ipa", out)
@@ -66,7 +67,7 @@ func buildIOS(tmpDir, target string, bi *buildInfo) error {
 		}
 		payload := filepath.Join(tmpDir, "Payload")
 		appDir := filepath.Join(payload, appName+".app")
-		if err := os.MkdirAll(appDir, 0755); err != nil {
+		if err := os.MkdirAll(appDir, 0o755); err != nil {
 			return err
 		}
 		if err := exeIOS(tmpDir, target, appDir, bi); err != nil {
@@ -139,7 +140,7 @@ func signIOS(bi *buildInfo, tmpDir, app string) error {
 			return err
 		}
 		entFile := filepath.Join(tmpDir, "entitlements.plist")
-		if err := os.WriteFile(entFile, []byte(entitlements), 0660); err != nil {
+		if err := os.WriteFile(entFile, []byte(entitlements), 0o660); err != nil {
 			return err
 		}
 		identity := sha1.Sum(certDER)
@@ -157,7 +158,7 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 	if err := os.RemoveAll(app); err != nil {
 		return err
 	}
-	if err := os.Mkdir(app, 0755); err != nil {
+	if err := os.Mkdir(app, 0o755); err != nil {
 		return err
 	}
 	appName := UppercaseName(bi.name)
@@ -205,7 +206,7 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 	}
 	infoPlist := buildInfoPlist(bi)
 	plistFile := filepath.Join(app, "Info.plist")
-	if err := os.WriteFile(plistFile, []byte(infoPlist), 0660); err != nil {
+	if err := os.WriteFile(plistFile, []byte(infoPlist), 0o660); err != nil {
 		return err
 	}
 	if _, err := os.Stat(bi.iconPath); err == nil {
@@ -233,7 +234,7 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 // iosIcons returns the asset plist file to be merged into Info.plist.
 func iosIcons(bi *buildInfo, tmpDir, appDir, icon string) (string, error) {
 	assets := filepath.Join(tmpDir, "Assets.xcassets")
-	if err := os.Mkdir(assets, 0700); err != nil {
+	if err := os.Mkdir(assets, 0o700); err != nil {
 		return "", err
 	}
 	appIcon := filepath.Join(assets, "AppIcon.appiconset")
@@ -270,7 +271,7 @@ func iosIcons(bi *buildInfo, tmpDir, appDir, icon string) (string, error) {
 	]
 }`
 	contentFile := filepath.Join(appIcon, "Contents.json")
-	if err := os.WriteFile(contentFile, []byte(contentJson), 0600); err != nil {
+	if err := os.WriteFile(contentFile, []byte(contentJson), 0o600); err != nil {
 		return "", err
 	}
 	assetPlist := filepath.Join(tmpDir, "assets.plist")
@@ -386,7 +387,7 @@ func archiveIOS(tmpDir, target, frameworkRoot string, bi *buildInfo) error {
 	frameworkDir := filepath.Join(frameworkRoot, "Versions", "A")
 	for _, dir := range []string{"Headers", "Modules"} {
 		p := filepath.Join(frameworkDir, dir)
-		if err := os.MkdirAll(p, 0755); err != nil {
+		if err := os.MkdirAll(p, 0o755); err != nil {
 			return err
 		}
 	}
@@ -457,7 +458,7 @@ func archiveIOS(tmpDir, target, frameworkRoot string, bi *buildInfo) error {
     export *
 }`, framework)
 	moduleFile := filepath.Join(frameworkDir, "Modules", "module.modulemap")
-	return os.WriteFile(moduleFile, []byte(module), 0644)
+	return os.WriteFile(moduleFile, []byte(module), 0o644)
 }
 
 func iosCompilerFor(target, arch string, minsdk int) (string, []string, error) {

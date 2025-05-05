@@ -191,10 +191,7 @@ func compileAndroid(tmpDir string, tools *androidTools, bi *buildInfo) (err erro
 	if err != nil {
 		return err
 	}
-	minSDK := 17
-	if bi.minsdk > minSDK {
-		minSDK = bi.minsdk
-	}
+	minSDK := max(bi.minsdk, 17)
 	tcRoot := filepath.Join(ndkRoot, "toolchains", "llvm", "prebuilt", archNDK())
 	var builds errgroup.Group
 	for _, a := range bi.archs {
@@ -213,7 +210,7 @@ func compileAndroid(tmpDir string, tools *androidTools, bi *buildInfo) (err erro
 			}
 		}
 		archDir := filepath.Join(tmpDir, "jni", arch.jniArch)
-		if err := os.MkdirAll(archDir, 0755); err != nil {
+		if err := os.MkdirAll(archDir, 0o755); err != nil {
 			return fmt.Errorf("failed to create %q: %v", archDir, err)
 		}
 		libFile := filepath.Join(archDir, "libgio.so")
@@ -252,7 +249,7 @@ func compileAndroid(tmpDir string, tools *androidTools, bi *buildInfo) (err erro
 	}
 	if len(javaFiles) > 0 {
 		classes := filepath.Join(tmpDir, "classes")
-		if err := os.MkdirAll(classes, 0755); err != nil {
+		if err := os.MkdirAll(classes, 0o755); err != nil {
 			return err
 		}
 		javac := exec.Command(
@@ -349,13 +346,10 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 	})
 	classFiles = append(classFiles, extraJars...)
 	dexDir := filepath.Join(tmpDir, "apk")
-	if err := os.MkdirAll(dexDir, 0755); err != nil {
+	if err := os.MkdirAll(dexDir, 0o755); err != nil {
 		return err
 	}
-	minSDK := 16
-	if bi.minsdk > minSDK {
-		minSDK = bi.minsdk
-	}
+	minSDK := max(bi.minsdk, 16)
 	// https://developer.android.com/distribute/best-practices/develop/target-sdk
 	targetSDK := 33
 	if bi.targetsdk > 0 {
@@ -387,7 +381,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 	v21Dir := filepath.Join(resDir, "values-v21")
 	v26mipmapDir := filepath.Join(resDir, `mipmap-anydpi-v26`)
 	for _, dir := range []string{valDir, v21Dir, v26mipmapDir} {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return err
 		}
 	}
@@ -411,17 +405,17 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@mipmap/ic_launcher_adaptive" />
     <foreground android:drawable="@mipmap/ic_launcher_adaptive" />
-</adaptive-icon>`), 0660)
+</adaptive-icon>`), 0o660)
 		if err != nil {
 			return err
 		}
 		iconSnip = `android:icon="@mipmap/ic_launcher"`
 	}
-	err = os.WriteFile(filepath.Join(valDir, "themes.xml"), []byte(themes), 0660)
+	err = os.WriteFile(filepath.Join(valDir, "themes.xml"), []byte(themes), 0o660)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join(v21Dir, "themes.xml"), []byte(themesV21), 0660)
+	err = os.WriteFile(filepath.Join(v21Dir, "themes.xml"), []byte(themesV21), 0o660)
 	if err != nil {
 		return err
 	}
@@ -477,7 +471,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		return err
 	}
 	manifest := filepath.Join(tmpDir, "AndroidManifest.xml")
-	if err := os.WriteFile(manifest, manifestBuffer.Bytes(), 0660); err != nil {
+	if err := os.WriteFile(manifest, manifestBuffer.Bytes(), 0o660); err != nil {
 		return err
 	}
 
@@ -679,7 +673,7 @@ func signAAB(tmpDir string, aabFile string, tools *androidTools, bi *buildInfo) 
 	}
 
 	var alias string
-	for _, t := range strings.Split(keytoolList, "\n") {
+	for t := range strings.SplitSeq(keytoolList, "\n") {
 		if i, _ := fmt.Sscanf(t, "Alias name: %s", &alias); i > 0 {
 			break
 		}

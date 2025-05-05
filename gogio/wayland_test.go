@@ -174,7 +174,7 @@ func (d *WaylandTestDriver) Screenshot() image.Image {
 	return img
 }
 
-func (d *WaylandTestDriver) swaymsg(args ...interface{}) {
+func (d *WaylandTestDriver) swaymsg(args ...any) {
 	strs := []string{"--socket", d.socket}
 	for _, arg := range args {
 		strs = append(strs, fmt.Sprint(arg))

@@ -89,7 +89,7 @@ func (b *macBuilder) setIcon(path string) (err error) {
 	}
 
 	out := filepath.Join(b.TempDir, "iconset.iconset")
-	if err := os.MkdirAll(out, 0777); err != nil {
+	if err := os.MkdirAll(out, 0o777); err != nil {
 		return err
 	}
 
@@ -107,7 +107,6 @@ func (b *macBuilder) setIcon(path string) (err error) {
 		{path: "icon_16x16@2x.png", size: 32},
 		{path: "icon_16x16.png", size: 16},
 	})
-
 	if err != nil {
 		return err
 	}
@@ -171,18 +170,18 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 
 func (b *macBuilder) buildProgram(buildInfo *buildInfo, binDest string, name string, arch string) error {
 	for _, path := range []string{"/Contents/MacOS", "/Contents/Resources"} {
-		if err := os.MkdirAll(filepath.Join(binDest, path), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(binDest, path), 0o755); err != nil {
 			return err
 		}
 	}
 
 	if len(b.Icons) > 0 {
-		if err := os.WriteFile(filepath.Join(binDest, "/Contents/Resources/icon.icns"), b.Icons, 0755); err != nil {
+		if err := os.WriteFile(filepath.Join(binDest, "/Contents/Resources/icon.icns"), b.Icons, 0o755); err != nil {
 			return err
 		}
 	}
 
-	if err := os.WriteFile(filepath.Join(binDest, "/Contents/Info.plist"), b.Manifest, 0755); err != nil {
+	if err := os.WriteFile(filepath.Join(binDest, "/Contents/Info.plist"), b.Manifest, 0o755); err != nil {
 		return err
 	}
 
@@ -206,7 +205,7 @@ func (b *macBuilder) buildProgram(buildInfo *buildInfo, binDest string, name str
 
 func (b *macBuilder) signProgram(buildInfo *buildInfo, binDest string, name string, arch string) error {
 	options := filepath.Join(b.TempDir, "ent.ent")
-	if err := os.WriteFile(options, b.Entitlements, 0777); err != nil {
+	if err := os.WriteFile(options, b.Entitlements, 0o777); err != nil {
 		return err
 	}
 

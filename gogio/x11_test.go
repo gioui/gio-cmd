@@ -145,7 +145,7 @@ func (d *X11TestDriver) Screenshot() image.Image {
 	return img
 }
 
-func (d *X11TestDriver) xdotool(args ...interface{}) string {
+func (d *X11TestDriver) xdotool(args ...any) string {
 	d.Helper()
 	strs := make([]string, len(args))
 	for i, arg := range args {

@@ -20,7 +20,7 @@ func buildJS(bi *buildInfo) error {
 	if out == "" {
 		out = bi.name
 	}
-	if err := os.MkdirAll(out, 0700); err != nil {
+	if err := os.MkdirAll(out, 0o700); err != nil {
 		return err
 	}
 	cmd := exec.Command(
@@ -48,7 +48,7 @@ func buildJS(bi *buildInfo) error {
 		if err != nil {
 			return err
 		}
-		if err := os.WriteFile(filepath.Join(out, filepath.Base(bi.iconPath)), icon, 0600); err != nil {
+		if err := os.WriteFile(filepath.Join(out, filepath.Base(bi.iconPath)), icon, 0o600); err != nil {
 			return err
 		}
 		faviconPath = filepath.Base(bi.iconPath)
@@ -70,7 +70,7 @@ func buildJS(bi *buildInfo) error {
 		return err
 	}
 
-	if err := os.WriteFile(filepath.Join(out, "index.html"), b.Bytes(), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(out, "index.html"), b.Bytes(), 0o600); err != nil {
 		return err
 	}
 

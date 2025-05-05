@@ -180,7 +180,7 @@ func getAppID(pkgMetadata *packageMetadata) string {
 		name = "." + domain[0]
 		domain[0] = "localhost"
 	} else {
-		for i := 0; i < len(domain)/2; i++ {
+		for i := range len(domain) / 2 {
 			opp := len(domain) - 1 - i
 			domain[i], domain[opp] = domain[opp], domain[i]
 		}
