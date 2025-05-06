@@ -353,19 +353,16 @@ func (w *quarterWidget) Layout(gtx layout.Context) layout.Dimensions {
 		Max: image.Pt(gtx.Constraints.Max.X, gtx.Constraints.Max.Y),
 	}).Push(gtx.Ops).Pop()
 	event.Op(gtx.Ops, w)
-	for {
-		e, ok := gtx.Event(pointer.Filter{
-			Target: w,
-			Kinds:  pointer.Press,
-		})
-		if !ok {
-			break
-		}
+	for e := range gtx.Events(pointer.Filter{
+		Target: w,
+		Kinds:  pointer.Press,
+	}) {
 		if e, ok := e.(pointer.Event); ok && e.Kind == pointer.Press {
 			w.clicked = !w.clicked
 			// notify when we're done updating the frame.
 			notify = notifyInvalidate
 		}
 	}
+
 	return layout.Dimensions{Size: gtx.Constraints.Max}
 }
