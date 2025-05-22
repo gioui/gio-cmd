@@ -72,6 +72,7 @@ The -signkey flag specifies the path of the keystore, used for signing Android a
 or specifies the name of key on Keychain to sign MacOS app.
 
 The -signpass flag specifies the password of the keystore, ignored if -signkey is not provided.
+If -signpass is not sepecified it will be read from the environment variable GOGIO_SIGNPASS.
 
 The -notaryid flag specifies the Apple ID to use for notarization of MacOS app.
 

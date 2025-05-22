@@ -56,6 +56,10 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	sp := *signPass
+	if sp == "" {
+		sp = os.Getenv("GOGIO_SIGNPASS")
+	}
 	bi := &buildInfo{
 		appID:          appID,
 		archs:          getArchs(),
@@ -70,7 +74,7 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		target:         *target,
 		version:        ver,
 		key:            *signKey,
-		password:       *signPass,
+		password:       sp,
 		notaryAppleID:  *notaryID,
 		notaryPassword: *notaryPass,
 		notaryTeamID:   *notaryTeamID,
