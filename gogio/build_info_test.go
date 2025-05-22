@@ -2,14 +2,12 @@ package main
 
 import "testing"
 
-type expval struct {
-	in, out string
-}
-
 func TestAppID(t *testing.T) {
 	t.Parallel()
 
-	tests := []expval{
+	tests := []struct {
+		in, out string
+	}{
 		{"example", "localhost.example"},
 		{"example.com", "com.example"},
 		{"www.example.com", "com.example.www"},
@@ -27,6 +25,35 @@ func TestAppID(t *testing.T) {
 		got := getAppID(&packageMetadata{PkgPath: test.in})
 		if exp := test.out; got != exp {
 			t.Errorf("(%d): expected '%s', got '%s'", i, exp, got)
+		}
+	}
+}
+
+func TestVersion(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		version string
+		valid   bool
+	}{
+		{"v1", false},
+		{"v10.21.333.12", false},
+		{"1.2.3", false},
+		{"1.2.3.4", true},
+	}
+
+	for i, test := range tests {
+		ver, err := parseSemver(test.version)
+		if err != nil {
+			if test.valid {
+				t.Errorf("(%d): %q failed to parse: %v", i, test.version, err)
+			}
+			continue
+		} else if !test.valid {
+			t.Errorf("(%d): %q was unexpectedly accepted", i, test.version)
+		}
+		if got := ver.String(); got != test.version {
+			t.Errorf("(%d): %q parsed to %q", i, test.version, got)
 		}
 	}
 }

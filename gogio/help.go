@@ -47,8 +47,9 @@ The -appid flag specifies the package name for Android or the bundle id for
 iOS and tvOS. A bundle id must be provisioned through Xcode before the gogio
 tool can use it.
 
-The -version flag specifies the integer version code for Android and the last
-component of the 1.0.X version for iOS and tvOS.
+The -version flag specifies the semantic version for -buildmode exe. It must
+be on the form major.minor.patch.versioncode where the version code is used for
+the integer version number for Android, iOS and tvOS.
 
 For Android builds the -minsdk flag specify the minimum SDK level. For example,
 use -minsdk 22 to target Android 5.1 (Lollipop) and later.

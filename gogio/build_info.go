@@ -91,11 +91,8 @@ func (s Semver) String() string {
 func parseSemver(v string) (Semver, error) {
 	var sv Semver
 	_, err := fmt.Sscanf(v, "%d.%d.%d.%d", &sv.Major, &sv.Minor, &sv.Patch, &sv.VersionCode)
-	if err != nil {
-		return Semver{}, fmt.Errorf("invalid semver: %q", v)
-	}
-	if sv.String() != v {
-		return Semver{}, fmt.Errorf("invalid semver: %q", v)
+	if err != nil || sv.String() != v {
+		return Semver{}, fmt.Errorf("invalid semver: %q (must match major.minor.patch.versioncode)", v)
 	}
 	return sv, nil
 }
