@@ -132,11 +132,7 @@ func (w *quarterWidget) Layout(gtx layout.Context) layout.Dimensions {
 		Kinds:  pointer.Press,
 	}
 
-	for {
-		e, ok := gtx.Event(filter)
-		if !ok {
-			break
-		}
+	for e := range gtx.Events(filter) {
 		if e, ok := e.(pointer.Event); ok && e.Kind == pointer.Press {
 			w.clicked = !w.clicked
 			// notify when we're done updating the frame.
