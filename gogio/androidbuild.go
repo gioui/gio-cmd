@@ -217,7 +217,7 @@ func compileAndroid(tmpDir string, tools *androidTools, bi *buildInfo) (err erro
 		cmd := exec.Command(
 			"go",
 			"build",
-			"-ldflags=-w -s "+bi.ldflags,
+			"-ldflags=-w -s -extldflags \"-Wl,-z,max-page-size=65536\" "+bi.ldflags,
 			"-buildmode=c-shared",
 			"-tags", bi.tags,
 			"-o", libFile,
