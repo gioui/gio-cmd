@@ -32,6 +32,7 @@ type buildInfo struct {
 	notaryPassword string
 	notaryTeamID   string
 	schemes        []string
+	packageQueries []string
 }
 
 type Semver struct {
@@ -80,6 +81,7 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		notaryPassword: *notaryPass,
 		notaryTeamID:   *notaryTeamID,
 		schemes:        getCommaList(*schemes),
+		packageQueries: getCommaList(*pkgQueries),
 	}
 	return bi, nil
 }

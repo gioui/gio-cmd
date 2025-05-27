@@ -42,6 +42,7 @@ var (
 	notaryPass    = flag.String("notarypass", "", "specify app-specific password of the Apple ID to be used for notarization.")
 	notaryTeamID  = flag.String("notaryteamid", "", "specify the team id to use for notarization.")
 	schemes       = flag.String("schemes", "", "specify a list of comma separated URL schemes that the program accepts")
+	pkgQueries    = flag.String("queries", "", "specify a list of comma separated package names used to query other apps on Android.")
 )
 
 func main() {
