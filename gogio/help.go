@@ -87,4 +87,8 @@ The -schemes flag specifies a list of comma separated URI schemes that the progr
 handle. For example, use -schemes yourAppName to receive a app.URLEvent for URIs 
 starting with yourAppName://. It is only supported on Android, iOS, macOS and Windows. 
 On Windows, it will restrict the program to a single instance.
+
+The -queries flag specifies a list of comma separated package names used to query other apps,
+that is useful to launch other apps and verify their presence. For example, use -queries 
+com.example.otherapp to query the app with that package name. It is only necessary on Android.
 `
