@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -34,9 +35,7 @@ func buildMac(tmpDir string, bi *buildInfo) error {
 		return err
 	}
 
-	if err := builder.setInfo(bi, name); err != nil {
-		return fmt.Errorf("can't build the resources: %v", err)
-	}
+	builder.setInfo(bi, name)
 
 	for _, arch := range bi.archs {
 		tmpDest := filepath.Join(builder.TempDir, filepath.Base(builder.DestDir))
@@ -123,7 +122,20 @@ func (b *macBuilder) setIcon(path string) (err error) {
 	return err
 }
 
-func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
+func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) {
+
+	manifestSrc := struct {
+		Name    string
+		Bundle  string
+		Version Semver
+		Schemes []string
+	}{
+		Name:    name,
+		Bundle:  buildInfo.appID,
+		Version: buildInfo.version,
+		Schemes: buildInfo.schemes,
+	}
+
 	t, err := template.New("manifest").Parse(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -138,20 +150,28 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 	<true/>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+    {{if .Schemes}}
+	<key>CFBundleURLTypes</key>
+	<array>
+	  {{range .Schemes}}
+	  <dict>
+		<key>CFBundleURLSchemes</key>
+		<array>
+		  <string>{{.}}</string>
+		</array>
+	  </dict>
+	  {{end}}
+	</array>
+    {{end}}
 </dict>
 </plist>`)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	var manifest bufferCoff
-	if err := t.Execute(&manifest, struct {
-		Name, Bundle string
-	}{
-		Name:   name,
-		Bundle: buildInfo.appID,
-	}); err != nil {
-		return err
+	var manifest bytes.Buffer
+	if err := t.Execute(&manifest, manifestSrc); err != nil {
+		panic(err)
 	}
 	b.Manifest = manifest.Bytes()
 
@@ -165,8 +185,6 @@ func (b *macBuilder) setInfo(buildInfo *buildInfo, name string) error {
 <true/>
 </dict>
 </plist>`)
-
-	return nil
 }
 
 func (b *macBuilder) buildProgram(buildInfo *buildInfo, binDest string, name string, arch string) error {

@@ -30,6 +30,7 @@ type buildInfo struct {
 	notaryAppleID  string
 	notaryPassword string
 	notaryTeamID   string
+	schemes        []string
 }
 
 type Semver struct {
@@ -72,6 +73,7 @@ func newBuildInfo(pkgPath string) (*buildInfo, error) {
 		notaryAppleID:  *notaryID,
 		notaryPassword: *notaryPass,
 		notaryTeamID:   *notaryTeamID,
+		schemes:        getCommaList(*schemes),
 	}
 	return bi, nil
 }
@@ -142,6 +144,15 @@ func getLdFlags(appID string) string {
 		ldflags = append(ldflags, "-linkmode="+m)
 	}
 	return strings.Join(ldflags, " ")
+}
+
+func getCommaList(s string) (list []string) {
+	for _, v := range strings.Split(s, ",") {
+		if v := strings.TrimSpace(v); v != "" {
+			list = append(list, v)
+		}
+	}
+	return list
 }
 
 type packageMetadata struct {
