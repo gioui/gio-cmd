@@ -82,4 +82,9 @@ for details. If not provided, the password will be prompted.
 
 The -notaryteamid flag specifies the team ID to use for notarization of MacOS app, ignored if
 -notaryid is not provided.
+
+The -schemes flag specifies a list of comma separated URI schemes that the program can 
+handle. For example, use -schemes yourAppName to receive a app.URLEvent for URIs 
+starting with yourAppName://. It is only supported on Android, iOS, macOS and Windows. 
+On Windows, it will restrict the program to a single instance.
 `

@@ -48,6 +48,7 @@ type manifestData struct {
 	Features    []string
 	IconSnip    string
 	AppName     string
+	Schemes     []string
 }
 
 const (
@@ -442,6 +443,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		Features:    features,
 		IconSnip:    iconSnip,
 		AppName:     appName,
+		Schemes:     bi.schemes,
 	}
 	tmpl, err := template.New("test").Parse(
 		`<?xml version="1.0" encoding="utf-8"?>
@@ -458,11 +460,20 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 			android:theme="@style/Theme.GioApp"
 			android:configChanges="screenSize|screenLayout|smallestScreenSize|orientation|keyboardHidden"
 			android:windowSoftInputMode="adjustResize"
+			android:launchMode="singleInstance"
 			android:exported="true">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
+			{{range .Schemes}}
+			<intent-filter>
+				<action android:name="android.intent.action.VIEW"></action>
+				<category android:name="android.intent.category.DEFAULT"></category>
+				<category android:name="android.intent.category.BROWSABLE"></category>
+				<data android:scheme="{{.}}"></data>
+			</intent-filter>
+			{{end}}
 		</activity>
 	</application>
 </manifest>`)
