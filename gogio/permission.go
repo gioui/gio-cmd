@@ -22,6 +22,9 @@ var AndroidPermissions = map[string][]string{
 	"wakelock": {
 		"android.permission.WAKE_LOCK",
 	},
+	"microphone": {
+		"android.permission.RECORD_AUDIO",
+	},
 }
 
 var AndroidFeatures = map[string][]string{
