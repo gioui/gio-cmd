@@ -79,7 +79,7 @@ func buildIOS(tmpDir, target string, bi *buildInfo) error {
 		embedded := filepath.Join(appDir, "embedded.mobileprovision")
 
 		var provisions []string
-		if bi.key == "" {
+		if bi.key != "" {
 			if ext := filepath.Ext(bi.key); ext != ".mobileprovision" && ext != ".provisionprofile" {
 				return fmt.Errorf("sign: -signkey specifies an Apple provisioning profile, but %q does not end in .mobileprovision or .provisionprofile", bi.key)
 			}
@@ -221,7 +221,9 @@ func exeIOS(tmpDir, target, app string, bi *buildInfo) error {
 			"GOARCH="+a,
 			"CGO_ENABLED=1",
 			"CC="+clang,
+			"CXX="+clang+"++",
 			"CGO_CFLAGS="+cflagsLine,
+			"CGO_CXXFLAGS="+cflagsLine,
 			"CGO_LDFLAGS=-lresolv "+cflagsLine,
 		)
 		builds.Go(func() error {
