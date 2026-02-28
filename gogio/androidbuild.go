@@ -354,7 +354,7 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 	}
 	minSDK := max(bi.minsdk, 16)
 	// https://developer.android.com/distribute/best-practices/develop/target-sdk
-	targetSDK := 33
+	targetSDK := 35
 	if bi.targetsdk > 0 {
 		targetSDK = bi.targetsdk
 	}
