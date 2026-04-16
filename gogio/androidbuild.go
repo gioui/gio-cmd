@@ -50,6 +50,8 @@ type manifestData struct {
 	AppName        string
 	Schemes        []string
 	PackageQueries []string
+	ManifestSnip   string
+	AppSnip        string
 }
 
 const (
@@ -123,7 +125,7 @@ func buildAndroid(tmpDir string, bi *buildInfo) error {
 			return nil
 		}
 		dir := filepath.Dir(p.GoFiles[0])
-		jars, err := filepath.Glob(filepath.Join(dir, "*.jar"))
+		jars, err := androidExtraJars(dir)
 		if err != nil {
 			return err
 		}
@@ -422,6 +424,9 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 	if err != nil {
 		return err
 	}
+	if err := copyTree(filepath.Join(bi.pkgDir, "android", "res"), resDir); err != nil {
+		return err
+	}
 	resZip := filepath.Join(tmpDir, "resources.zip")
 	aapt2 := filepath.Join(tools.buildtools, "aapt2")
 	_, err = runCmd(exec.Command(
@@ -447,52 +452,15 @@ func exeAndroid(tmpDir string, tools *androidTools, bi *buildInfo, extraJars, pe
 		AppName:        appName,
 		Schemes:        bi.schemes,
 		PackageQueries: bi.packageQueries,
+		ManifestSnip:   readOptionalText(filepath.Join(bi.pkgDir, "android", "manifest_snippets.xml")),
+		AppSnip:        readOptionalText(filepath.Join(bi.pkgDir, "android", "application_snippets.xml")),
 	}
-	tmpl, err := template.New("test").Parse(
-		`<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="{{.AppID}}"
-	android:versionCode="{{.Version.VersionCode}}"
-	android:versionName="{{.Version}}">
-	{{if .PackageQueries}}
- 	<queries>
-	    {{range .PackageQueries}}
-        <package android:name="{{.}}" />
-        {{end}}
-    </queries>
-	{{end}}
-	<uses-sdk android:minSdkVersion="{{.MinSDK}}" android:targetSdkVersion="{{.TargetSDK}}" />
-{{range .Permissions}}	<uses-permission android:name="{{.}}"/>
-{{end}}{{range .Features}}	<uses-feature android:{{.}} android:required="false"/>
-{{end}}	<application {{.IconSnip}} android:label="{{.AppName}}">
-		<activity android:name="org.gioui.GioActivity"
-			android:label="{{.AppName}}"
-			android:theme="@style/Theme.GioApp"
-			android:configChanges="screenSize|screenLayout|smallestScreenSize|orientation|keyboardHidden"
-			android:windowSoftInputMode="adjustResize"
-			android:launchMode="singleInstance"
-			android:exported="true">
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
-				<category android:name="android.intent.category.LAUNCHER" />
-			</intent-filter>
-			{{range .Schemes}}
-			<intent-filter>
-				<action android:name="android.intent.action.VIEW"></action>
-				<category android:name="android.intent.category.DEFAULT"></category>
-				<category android:name="android.intent.category.BROWSABLE"></category>
-				<data android:scheme="{{.}}"></data>
-			</intent-filter>
-			{{end}}
-		</activity>
-	</application>
-</manifest>`)
-	var manifestBuffer bytes.Buffer
-	if err := tmpl.Execute(&manifestBuffer, manifestSrc); err != nil {
+	manifestBuffer, err := renderAndroidManifest(manifestSrc)
+	if err != nil {
 		return err
 	}
 	manifest := filepath.Join(tmpDir, "AndroidManifest.xml")
-	if err := os.WriteFile(manifest, manifestBuffer.Bytes(), 0o660); err != nil {
+	if err := os.WriteFile(manifest, manifestBuffer, 0o660); err != nil {
 		return err
 	}
 
@@ -755,6 +723,120 @@ func defaultAndroidKeystore(tmpDir string, bi *buildInfo) error {
 		"-dname", "CN=android",
 	))
 	return err
+}
+
+func renderAndroidManifest(data manifestData) ([]byte, error) {
+	tmpl, err := template.New("test").Parse(
+		`<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	package="{{.AppID}}"
+	android:versionCode="{{.Version.VersionCode}}"
+	android:versionName="{{.Version}}">
+	{{if .PackageQueries}}
+ 	<queries>
+	    {{range .PackageQueries}}
+        <package android:name="{{.}}" />
+        {{end}}
+    </queries>
+	{{end}}
+	<uses-sdk android:minSdkVersion="{{.MinSDK}}" android:targetSdkVersion="{{.TargetSDK}}" />
+{{range .Permissions}}	<uses-permission android:name="{{.}}"/>
+{{end}}{{range .Features}}	<uses-feature android:{{.}} android:required="false"/>
+{{end}}{{.ManifestSnip}}	<application {{.IconSnip}} android:label="{{.AppName}}">
+{{.AppSnip}}
+		<activity android:name="org.gioui.GioActivity"
+			android:label="{{.AppName}}"
+			android:theme="@style/Theme.GioApp"
+			android:configChanges="screenSize|screenLayout|smallestScreenSize|orientation|keyboardHidden"
+			android:windowSoftInputMode="adjustResize"
+			android:launchMode="singleInstance"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+			{{range .Schemes}}
+			<intent-filter>
+				<action android:name="android.intent.action.VIEW"></action>
+				<category android:name="android.intent.category.DEFAULT"></category>
+				<category android:name="android.intent.category.BROWSABLE"></category>
+				<data android:scheme="{{.}}"></data>
+			</intent-filter>
+			{{end}}
+		</activity>
+	</application>
+</manifest>`)
+	if err != nil {
+		return nil, err
+	}
+	var manifestBuffer bytes.Buffer
+	if err := tmpl.Execute(&manifestBuffer, data); err != nil {
+		return nil, err
+	}
+	return manifestBuffer.Bytes(), nil
+}
+
+func readOptionalText(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	if len(data) == 0 {
+		return ""
+	}
+	return "\n" + string(data) + "\n"
+}
+
+func copyTree(src, dst string) error {
+	info, err := os.Stat(src)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("extra Android resources path is not a directory: %s", src)
+	}
+	return filepath.Walk(src, func(path string, entry os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		if rel == "." {
+			return nil
+		}
+		target := filepath.Join(dst, rel)
+		if entry.IsDir() {
+			return os.MkdirAll(target, 0o755)
+		}
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			return err
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(target, data, 0o660)
+	})
+}
+
+func androidExtraJars(dir string) ([]string, error) {
+	var jars []string
+	for _, pattern := range []string{
+		filepath.Join(dir, "*.jar"),
+		filepath.Join(dir, "android", "*.jar"),
+	} {
+		matches, err := filepath.Glob(pattern)
+		if err != nil {
+			return nil, err
+		}
+		jars = append(jars, matches...)
+	}
+	return jars, nil
 }
 
 func findNDK(androidHome string) (string, error) {
